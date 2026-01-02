@@ -16,6 +16,7 @@ let testEnded = false;
 let startTime = null;
 let correctWords = 0;
 let incorrectWords = 0;
+let completedWordCount = 0; // Tracks only words completed with space key
 let totalTypedCharacters = 0;
 
 // Character-level tracking
@@ -198,7 +199,8 @@ function endTest() {
  * Calculate WPM, accuracy, and errors, then display results
  */
 function calculateAndDisplayResults() {
-    const totalWords = correctWords + incorrectWords;
+    // Use explicit completed word count instead of deriving it
+    const totalWords = completedWordCount;
     const accuracy = totalWords > 0 ? Math.round((correctWords / totalWords) * 100) : 0;
     
     // Calculate WPM based on actual time elapsed
@@ -215,7 +217,7 @@ function calculateAndDisplayResults() {
     if (accuracyElement) accuracyElement.textContent = `${accuracy}%`;
     if (errorsElement) errorsElement.textContent = incorrectWords;
     
-    console.log(`Results - WPM: ${wpm}, Accuracy: ${accuracy}%, Errors: ${incorrectWords}`);
+    console.log(`Results - WPM: ${wpm}, Accuracy: ${accuracy}%, Errors: ${incorrectWords}, Completed Words: ${completedWordCount}`);
 }
 
 /**
@@ -231,6 +233,7 @@ function resetStatistics() {
     startTime = null;
     correctWords = 0;
     incorrectWords = 0;
+    completedWordCount = 0; // Reset completed word count
     totalTypedCharacters = 0;
     
     if (timerInterval) {
@@ -325,9 +328,14 @@ function updateCharacterHighlighting(typedText, currentWord) {
     
     const charSpans = currentWordSpan.querySelectorAll('.char');
     
-    // Reset all character classes
+    // Reset all character classes in current word
     charSpans.forEach(span => {
-        span.classList.remove('correct', 'incorrect', 'cursor');
+        span.classList.remove('correct', 'incorrect', 'cursor', 'skipped');
+    });
+    
+    // Also reset cursor on any space elements
+    wordsContainer.querySelectorAll('.char.space').forEach(space => {
+        space.classList.remove('cursor');
     });
     
     // Apply highlighting for each typed character
@@ -351,6 +359,46 @@ function updateCharacterHighlighting(typedText, currentWord) {
             }
         }
     }
+    
+    // Handle cursor at space position (when word length is reached or exceeded)
+    if (typedText.length >= currentWord.length) {
+        // Word length reached or exceeded, show cursor at space position regardless of correctness
+        const nextSpaceElement = currentWordSpan.nextElementSibling;
+        if (nextSpaceElement && nextSpaceElement.classList.contains('space')) {
+            nextSpaceElement.classList.add('cursor');
+            
+            // Remove cursor from all characters of the word since it's now at space
+            charSpans.forEach(char => {
+                char.classList.remove('cursor');
+            });
+        }
+    }
+    
+    // Re-evaluate word state dynamically
+    updateWordState(currentWordSpan, typedText, currentWord);
+}
+
+/**
+ * Update word-level state based on current typed text
+ * @param {HTMLElement} wordSpan - The word span element
+ * @param {string} typedText - The text currently typed
+ * @param {string} expectedWord - The word that should be typed
+ */
+function updateWordState(wordSpan, typedText, expectedWord) {
+    // Remove all previous word states
+    wordSpan.classList.remove('completed', 'skipped', 'correct', 'incorrect');
+    
+    // Determine current word state
+    if (typedText.length === 0) {
+        // No text typed - word is in default state
+        return;
+    } else if (typedText === expectedWord) {
+        // Perfect match - word is correct
+        wordSpan.classList.add('correct');
+    } else if (typedText.length > 0) {
+        // Some text typed but not matching - word is incorrect
+        wordSpan.classList.add('incorrect');
+    }
 }
 
 /**
@@ -363,64 +411,163 @@ function handleKeyDown(event) {
         return;
     }
     
+    // Handle backspace for cross-word navigation
+    if (event.code === 'Backspace') {
+        event.preventDefault();
+        handleBackspace();
+        return;
+    }
+    
     // Check if spacebar was pressed
     if (event.code === 'Space') {
         event.preventDefault(); // Prevent default space behavior
-        handleWordSubmission();
+        handleSpacePress();
     }
 }
 
 /**
- * Handle word submission when spacebar is pressed
+ * Handle backspace key press with cross-word navigation
  */
-function handleWordSubmission() {
-    // Don't process if test has ended
-    if (testEnded) {
-        return;
+function handleBackspace() {
+    const typedText = typingInput.value;
+    
+    if (typedText.length === 0 && currentWordIndex > 0) {
+        // At beginning of word, move to previous word
+        moveToPreviousWord();
+    } else if (typedText.length > 0) {
+        // Remove last character normally
+        typingInput.value = typedText.slice(0, -1);
+        updateCharacterHighlighting(typingInput.value, displayedWords[currentWordIndex]);
+    }
+}
+
+/**
+ * Move cursor to the previous word
+ */
+function moveToPreviousWord() {
+    if (currentWordIndex <= 0) {
+        return; // Already at first word
     }
     
-    const typedWord = typingInput.value.trim();
-    
-    if (typedWord === '') {
-        return; // Don't process empty submissions
+    // Mark current word as inactive and clear all states
+    const currentWordSpan = wordsContainer.querySelector(`[data-index="${currentWordIndex}"]`);
+    if (currentWordSpan) {
+        currentWordSpan.classList.remove('active');
+        // Clear all word states - allow for fresh re-evaluation
+        currentWordSpan.classList.remove('completed', 'skipped', 'correct', 'incorrect');
     }
     
-    // Track typed characters
-    totalTypedCharacters += typedWord.length;
+    // Move to previous word
+    currentWordIndex--;
     
-    // Get the current word that should be typed
-    const currentWord = displayedWords[currentWordIndex];
+    // Get the previous word and set input to its content
+    const prevWord = displayedWords[currentWordIndex];
+    const prevWordSpan = wordsContainer.querySelector(`[data-index="${currentWordIndex}"]`);
     
-    if (!currentWord) {
-        console.error('No current word found');
-        return;
+    if (prevWordSpan && prevWord) {
+        // Mark previous word as active and clear its states for re-evaluation
+        prevWordSpan.classList.add('active');
+        prevWordSpan.classList.remove('completed', 'skipped', 'correct', 'incorrect');
+        
+        // Find the last correctly typed characters in the previous word
+        let lastCorrectIndex = -1;
+        const charSpans = prevWordSpan.querySelectorAll('.char:not(.space)');
+        
+        for (let i = 0; i < charSpans.length; i++) {
+            if (charSpans[i].classList.contains('correct')) {
+                lastCorrectIndex = i;
+            } else {
+                break;
+            }
+        }
+        
+        // Set input value to the correctly typed portion
+        if (lastCorrectIndex >= 0) {
+            typingInput.value = prevWord.substring(0, lastCorrectIndex + 1);
+        } else {
+            typingInput.value = '';
+        }
+        
+        // Update character highlighting for the previous word
+        updateCharacterHighlighting(typingInput.value, prevWord);
+    }
+}
+
+/**
+ * Handle space key press (soft word separator)
+ */
+function handleSpacePress() {
+    const typedText = typingInput.value.trim();
+    
+    if (typedText === '') {
+        // Skip current word if nothing was typed - do NOT count as completed
+        skipCurrentWord();
+        console.log(`Word skipped (not counted). Completed words: ${completedWordCount}`);
+    } else {
+        // Only increment completed word count when space is pressed AND text was typed
+        completedWordCount++;
+        
+        // Process the typed word
+        processCurrentWord(typedText);
     }
     
-    // Get the current word span element
+    // Move to next word
+    moveToNextWord();
+}
+
+/**
+ * Skip the current word (mark as skipped, not committed)
+ */
+function skipCurrentWord() {
     const currentWordSpan = wordsContainer.querySelector(`[data-index="${currentWordIndex}"]`);
     
-    if (!currentWordSpan) {
-        console.error('Current word span not found');
-        return;
+    if (currentWordSpan) {
+        // Mark word as skipped (can be corrected later)
+        currentWordSpan.classList.remove('active');
+        currentWordSpan.classList.add('skipped');
+        
+        // Mark all characters as skipped
+        const charSpans = currentWordSpan.querySelectorAll('.char:not(.space)');
+        charSpans.forEach(charSpan => {
+            charSpan.classList.remove('cursor', 'correct', 'incorrect');
+            charSpan.classList.add('skipped');
+        });
     }
+}
+
+/**
+ * Process the currently typed word
+ */
+function processCurrentWord(typedWord) {
+    // Track typed characters for statistics
+    totalTypedCharacters += typedWord.length;
     
-    // Compare typed word with current word
-    const isCorrect = typedWord === currentWord;
+    // Get the expected word
+    const expectedWord = displayedWords[currentWordIndex];
+    const isCorrect = typedWord === expectedWord;
     
-    // Update statistics
+    // Update statistics - word was already counted in handleSpacePress
     if (isCorrect) {
         correctWords++;
     } else {
         incorrectWords++;
     }
     
-    // Finalize current word - mark all characters as correct or incorrect
-    finalizeCurrentWord(currentWordSpan, typedWord, currentWord);
+    // Finalize the word visually
+    const currentWordSpan = wordsContainer.querySelector(`[data-index="${currentWordIndex}"]`);
+    if (currentWordSpan) {
+        finalizeCurrentWord(currentWordSpan, typedWord, expectedWord);
+        currentWordSpan.classList.remove('active', 'skipped', 'correct', 'incorrect');
+        currentWordSpan.classList.add('completed');
+    }
     
-    // Update visual feedback for the word
-    currentWordSpan.classList.remove('active');
-    currentWordSpan.classList.add(isCorrect ? 'correct' : 'incorrect');
-    
+    console.log(`Word "${typedWord}" ${isCorrect ? 'correct' : 'incorrect'}. Expected: "${expectedWord}". Completed words: ${completedWordCount}`);
+}
+
+/**
+ * Move to the next word
+ */
+function moveToNextWord() {
     // Clear the input field
     typingInput.value = '';
     
@@ -443,8 +590,6 @@ function handleWordSubmission() {
         console.log('All words completed!');
         endTest();
     }
-    
-    console.log(`Word "${typedWord}" ${isCorrect ? 'correct' : 'incorrect'}. Expected: "${currentWord}"`);
 }
 
 /**
@@ -483,13 +628,21 @@ function finalizeCurrentWord(wordSpan, typedWord, expectedWord) {
 function setInitialCursor(wordSpan) {
     const firstChar = wordSpan.querySelector('.char');
     if (firstChar) {
-        // Remove cursor from all characters first
+        // Remove cursor from all characters and spaces first
         wordsContainer.querySelectorAll('.char').forEach(char => {
             char.classList.remove('cursor');
+        });
+        wordsContainer.querySelectorAll('.char.space').forEach(space => {
+            space.classList.remove('cursor');
         });
         
         // Add cursor to first character of new word
         firstChar.classList.add('cursor');
+        
+        // Update character highlighting for the new word to ensure word state is evaluated
+        if (currentWordIndex < displayedWords.length) {
+            updateCharacterHighlighting('', displayedWords[currentWordIndex]);
+        }
     }
 }
 

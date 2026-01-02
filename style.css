@@ -6,9 +6,9 @@
 }
 
 body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background-color: #f8f9fa;
-    color: #333;
+    font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #ffffff;
+    color: #374151;
     line-height: 1.6;
     min-height: 100vh;
     display: flex;
@@ -18,11 +18,11 @@ body {
 
 /* Main container */
 .container {
-    max-width: 800px;
+    max-width: 1000px;
     width: 90%;
-    background: white;
+    background: #ffffff;
     border-radius: 12px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     padding: 2rem;
 }
 
@@ -85,150 +85,193 @@ h1 {
 }
 
 .words-container {
-    background-color: #f8f9fa;
-    border: 2px solid #e9ecef;
+    background-color: transparent;
+    border: none;
     border-radius: 8px;
-    padding: 1.5rem;
+    padding: 2rem;
     min-height: 120px;
-    font-size: 1.2rem;
-    line-height: 1.8;
-    color: #333;
+    font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', 'Monaco', 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+    font-size: 1.5rem;
+    line-height: 2;
+    color: #6c757d;
     text-align: left;
     margin-bottom: 1rem;
     overflow-wrap: break-word;
-    word-spacing: 0.3em;
+    word-spacing: 0.5em;
+    letter-spacing: 0.05em;
+    font-weight: 400;
 }
 
 .words-container:empty::before {
     content: "Words will appear here when you start typing practice";
     font-style: italic;
-    color: #adb5bd;
+    color: #9ca3af;
     display: flex;
     align-items: center;
     justify-content: center;
     height: 90px;
+    font-family: inherit;
 }
 
-/* Individual word styling */
+/* Individual word styling - minimal, no backgrounds */
 .words-container .word {
     display: inline;
-    padding: 2px 1px;
-    border-radius: 3px;
-    transition: background-color 0.2s ease;
+    margin: 0;
+    padding: 0;
+    transition: none;
     font-weight: 400;
-    color: #495057;
+    color: inherit;
+    background: none;
+    border: none;
 }
 
-/* Active word (currently being typed) */
-.words-container .word.active {
-    background-color: #fff3cd;
-    border: 1px solid #ffeaa7;
-    color: #856404;
-    font-weight: 500;
-}
-
-/* Correctly typed word */
-.words-container .word.correct {
-    background-color: #d4edda;
-    border: 1px solid #c3e6cb;
-    color: #155724;
-    font-weight: 500;
-}
-
-/* Incorrectly typed word */
-.words-container .word.incorrect {
-    background-color: #f8d7da;
-    border: 1px solid #f5c6cb;
-    color: #721c24;
-    font-weight: 500;
-}
-
-/* Character-level styling */
+/* Character-level styling - Monkeytype style */
 .words-container .char {
     position: relative;
-    transition: all 0.1s ease;
+    display: inline;
+    transition: color 0.1s ease;
+    color: #9ca3af; /* Light gray for inactive characters */
+    background: none;
+    border: none;
+    padding: 0;
+    margin: 0;
 }
 
-/* Cursor position (current character to type) */
+/* Cursor position (current character to type) - thin underline */
 .words-container .char.cursor {
-    background-color: #fff3cd;
-    border-left: 2px solid #007bff;
-    animation: cursor-blink 1s infinite;
+    color: #374151; /* Slightly darker for current char */
+    border-bottom: 2px solid #3b82f6; /* Blue underline cursor */
+    background: none;
+    animation: none;
 }
 
-@keyframes cursor-blink {
-    0%, 50% { 
-        border-left-color: #007bff; 
-    }
-    51%, 100% { 
-        border-left-color: transparent; 
-    }
-}
-
-/* Correctly typed character */
+/* Correctly typed character - green text only */
 .words-container .char.correct {
-    background-color: #d4edda;
-    color: #155724;
+    color: #10b981; /* Green text */
+    background: none;
+    border: none;
+    font-weight: 400;
 }
 
-/* Incorrectly typed character */
+/* Incorrectly typed character - red text only */
 .words-container .char.incorrect {
-    background-color: #f8d7da;
-    color: #721c24;
+    color: #ef4444; /* Red text */
+    background: none;
+    border: none;
+    font-weight: 400;
+    animation: none;
 }
 
-/* Space character styling */
+/* Skipped character - dimmed text */
+.words-container .char.skipped {
+    color: #d1d5db; /* Lighter gray for skipped */
+    background: none;
+    border: none;
+    font-weight: 400;
+}
+
+/* Space character styling - no background */
 .words-container .char.space {
-    display: inline-block;
+    display: inline;
     width: 0.5em;
+    background: none;
+    border: none;
 }
 
-/* Override word-level styling when using character-level */
+.words-container .char.space.cursor {
+    border-bottom: 2px solid #3b82f6;
+    background: none;
+}
+
+.words-container .char.space.correct {
+    background: none;
+    border: none;
+}
+
+.words-container .char.space.incorrect {
+    background: none;
+    border: none;
+}
+
+/* Active word styling - remove all backgrounds and borders */
 .words-container .word.active {
-    background-color: transparent;
+    background: none;
     border: none;
-    color: inherit;
-    font-weight: inherit;
+    padding: 0;
+    margin: 0;
+    box-shadow: none;
+    border-radius: 0;
 }
 
-.words-container .word.correct,
-.words-container .word.incorrect {
-    background-color: transparent;
+/* Dynamic word states based on current typed content */
+.words-container .word.correct {
+    opacity: 1;
+    background: none;
     border: none;
-    color: inherit;
-    font-weight: inherit;
+}
+
+.words-container .word.incorrect {
+    opacity: 1;
+    background: none;
+    border: none;
+}
+
+/* Completed word styling - subtle opacity only */
+.words-container .word.completed {
+    opacity: 0.6;
+    transition: opacity 0.2s ease;
+    background: none;
+    border: none;
+}
+
+/* Skipped word styling - very subtle */
+.words-container .word.skipped {
+    opacity: 0.4;
+    transition: opacity 0.2s ease;
+    background: none;
+    border: none;
+}
+
+/* Clean inactive character styling */
+.words-container .word.active .char:not(.correct):not(.incorrect):not(.cursor) {
+    color: #9ca3af; /* Light gray */
+    opacity: 1;
+    background: none;
+    border: none;
 }
 
 .typing-input {
     width: 100%;
     padding: 1rem;
     font-size: 1.1rem;
-    border: 2px solid #e9ecef;
+    border: 1px solid #d1d5db;
     border-radius: 8px;
     outline: none;
-    transition: all 0.3s ease;
-    background-color: #f8f9fa;
-    color: #6c757d;
+    transition: all 0.2s ease;
+    background-color: #ffffff;
+    color: #374151;
+    font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', 'Monaco', 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
 }
 
 .typing-input:focus {
-    border-color: #007bff;
-    background-color: white;
-    color: #333;
-    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+    border-color: #3b82f6;
+    background-color: #ffffff;
+    color: #374151;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
 .typing-input:disabled {
     cursor: not-allowed;
-    opacity: 0.6;
-    background-color: #e9ecef;
+    opacity: 0.5;
+    background-color: #f9fafb;
+    color: #6b7280;
 }
 
 /* Enabled input styling */
 .typing-input:not(:disabled) {
-    background-color: white;
-    color: #333;
-    border-color: #28a745;
+    background-color: #ffffff;
+    color: #374151;
+    border-color: #d1d5db;
 }
 
 /* Stats section */
