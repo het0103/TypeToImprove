@@ -103,6 +103,62 @@ h1 {
     font-weight: 500;
 }
 
+/* Character-level styling */
+.words-container .char {
+    position: relative;
+    transition: all 0.1s ease;
+}
+
+/* Cursor position (current character to type) */
+.words-container .char.cursor {
+    background-color: #fff3cd;
+    border-left: 2px solid #007bff;
+    animation: cursor-blink 1s infinite;
+}
+
+@keyframes cursor-blink {
+    0%, 50% { 
+        border-left-color: #007bff; 
+    }
+    51%, 100% { 
+        border-left-color: transparent; 
+    }
+}
+
+/* Correctly typed character */
+.words-container .char.correct {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+/* Incorrectly typed character */
+.words-container .char.incorrect {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+/* Space character styling */
+.words-container .char.space {
+    display: inline-block;
+    width: 0.5em;
+}
+
+/* Override word-level styling when using character-level */
+.words-container .word.active {
+    background-color: transparent;
+    border: none;
+    color: inherit;
+    font-weight: inherit;
+}
+
+.words-container .word.correct,
+.words-container .word.incorrect {
+    background-color: transparent;
+    border: none;
+    color: inherit;
+    font-weight: inherit;
+}
+
 .typing-input {
     width: 100%;
     padding: 1rem;

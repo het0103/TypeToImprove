@@ -18,6 +18,9 @@ let correctWords = 0;
 let incorrectWords = 0;
 let totalTypedCharacters = 0;
 
+// Character-level tracking
+let currentCharIndex = 0;
+
 /**
  * Fisher-Yates shuffle algorithm for high randomness
  * This ensures each possible ordering of elements has equal probability
@@ -61,7 +64,7 @@ function generateRandomWords(count = 45) {
 
 /**
  * Display words in the words container
- * Each word is wrapped in a span with class 'word' for future styling
+ * Each character is wrapped in a span with class 'char' for character-level highlighting
  * @param {Array} wordArray - Array of words to display
  */
 function displayWords(wordArray) {
@@ -78,25 +81,41 @@ function displayWords(wordArray) {
     // Clear existing content
     wordsContainer.innerHTML = '';
     
-    // Create span elements for each word
-    wordArray.forEach((word, index) => {
+    // Create span elements for each word with character-level spans
+    wordArray.forEach((word, wordIndex) => {
         const wordSpan = document.createElement('span');
         wordSpan.className = 'word';
-        wordSpan.textContent = word;
-        
-        // Add data attribute for word index (useful for future features)
-        wordSpan.setAttribute('data-index', index);
+        wordSpan.setAttribute('data-index', wordIndex);
         
         // Mark the first word as active
-        if (index === 0) {
+        if (wordIndex === 0) {
             wordSpan.classList.add('active');
         }
+        
+        // Create character spans for each character in the word
+        word.split('').forEach((char, charIndex) => {
+            const charSpan = document.createElement('span');
+            charSpan.className = 'char';
+            charSpan.textContent = char;
+            charSpan.setAttribute('data-char-index', charIndex);
+            
+            // Mark the first character of the first word as cursor position
+            if (wordIndex === 0 && charIndex === 0) {
+                charSpan.classList.add('cursor');
+            }
+            
+            wordSpan.appendChild(charSpan);
+        });
         
         wordsContainer.appendChild(wordSpan);
         
         // Add space between words (except after the last word)
-        if (index < wordArray.length - 1) {
-            wordsContainer.appendChild(document.createTextNode(' '));
+        if (wordIndex < wordArray.length - 1) {
+            const spaceSpan = document.createElement('span');
+            spaceSpan.className = 'char space';
+            spaceSpan.textContent = ' ';
+            spaceSpan.setAttribute('data-space', 'true');
+            wordsContainer.appendChild(spaceSpan);
         }
     });
 }
@@ -194,6 +213,7 @@ function calculateAndDisplayResults() {
 function resetStatistics() {
     currentWordIndex = 0;
     displayedWords = [];
+    currentCharIndex = 0;
     timeRemaining = testDuration;
     testStarted = false;
     testEnded = false;
@@ -247,10 +267,79 @@ function enableTypingInput() {
     typingInput.disabled = false;
     typingInput.focus();
     
-    // Add event listener for keydown events
+    // Add event listeners for both keydown and input events
     typingInput.addEventListener('keydown', handleKeyDown);
+    typingInput.addEventListener('input', handleInput);
     
     console.log('Typing input enabled and focused');
+}
+
+/**
+ * Handle input events for character-level tracking
+ * @param {InputEvent} event - The input event
+ */
+function handleInput(event) {
+    // Don't process if test has ended
+    if (testEnded) {
+        return;
+    }
+    
+    // Start timer on first input
+    if (!testStarted) {
+        startTimer();
+    }
+    
+    const typedText = typingInput.value;
+    const currentWord = displayedWords[currentWordIndex];
+    
+    if (!currentWord) {
+        return;
+    }
+    
+    // Update character-level highlighting
+    updateCharacterHighlighting(typedText, currentWord);
+}
+
+/**
+ * Update character-level highlighting based on typed text
+ * @param {string} typedText - The text currently in the input field
+ * @param {string} currentWord - The word that should be typed
+ */
+function updateCharacterHighlighting(typedText, currentWord) {
+    const currentWordSpan = wordsContainer.querySelector(`[data-index="${currentWordIndex}"]`);
+    
+    if (!currentWordSpan) {
+        return;
+    }
+    
+    const charSpans = currentWordSpan.querySelectorAll('.char');
+    
+    // Reset all character classes
+    charSpans.forEach(span => {
+        span.classList.remove('correct', 'incorrect', 'cursor');
+    });
+    
+    // Apply highlighting for each typed character
+    for (let i = 0; i < Math.max(typedText.length, currentWord.length); i++) {
+        if (i < charSpans.length) {
+            const charSpan = charSpans[i];
+            
+            if (i < typedText.length) {
+                // Character has been typed
+                const typedChar = typedText[i];
+                const expectedChar = currentWord[i];
+                
+                if (typedChar === expectedChar) {
+                    charSpan.classList.add('correct');
+                } else {
+                    charSpan.classList.add('incorrect');
+                }
+            } else if (i === typedText.length) {
+                // Current cursor position
+                charSpan.classList.add('cursor');
+            }
+        }
+    }
 }
 
 /**
@@ -258,9 +347,9 @@ function enableTypingInput() {
  * @param {KeyboardEvent} event - The keydown event
  */
 function handleKeyDown(event) {
-    // Start timer on first keystroke
-    if (!testStarted && !testEnded) {
-        startTimer();
+    // Don't process if test has ended
+    if (testEnded) {
+        return;
     }
     
     // Check if spacebar was pressed
@@ -314,22 +403,29 @@ function handleWordSubmission() {
         incorrectWords++;
     }
     
-    // Update visual feedback
+    // Finalize current word - mark all characters as correct or incorrect
+    finalizeCurrentWord(currentWordSpan, typedWord, currentWord);
+    
+    // Update visual feedback for the word
     currentWordSpan.classList.remove('active');
     currentWordSpan.classList.add(isCorrect ? 'correct' : 'incorrect');
     
     // Clear the input field
     typingInput.value = '';
     
+    // Reset character tracking
+    currentCharIndex = 0;
+    
     // Move to next word
     currentWordIndex++;
     
     // Check if there are more words and test hasn't ended
     if (currentWordIndex < displayedWords.length && !testEnded) {
-        // Mark next word as active
+        // Mark next word as active and set cursor
         const nextWordSpan = wordsContainer.querySelector(`[data-index="${currentWordIndex}"]`);
         if (nextWordSpan) {
             nextWordSpan.classList.add('active');
+            setInitialCursor(nextWordSpan);
         }
     } else if (!testEnded) {
         // All words completed before time ended
@@ -338,6 +434,52 @@ function handleWordSubmission() {
     }
     
     console.log(`Word "${typedWord}" ${isCorrect ? 'correct' : 'incorrect'}. Expected: "${currentWord}"`);
+}
+
+/**
+ * Finalize the current word by marking all characters with their final state
+ * @param {HTMLElement} wordSpan - The word span element
+ * @param {string} typedWord - The word that was typed
+ * @param {string} expectedWord - The word that was expected
+ */
+function finalizeCurrentWord(wordSpan, typedWord, expectedWord) {
+    const charSpans = wordSpan.querySelectorAll('.char');
+    
+    charSpans.forEach((charSpan, index) => {
+        charSpan.classList.remove('cursor');
+        
+        if (index < typedWord.length) {
+            // Character was typed
+            const typedChar = typedWord[index];
+            const expectedChar = expectedWord[index];
+            
+            if (typedChar === expectedChar) {
+                charSpan.classList.add('correct');
+            } else {
+                charSpan.classList.add('incorrect');
+            }
+        } else {
+            // Character was not typed (if word is incomplete)
+            charSpan.classList.remove('correct', 'incorrect');
+        }
+    });
+}
+
+/**
+ * Set the initial cursor position for a new word
+ * @param {HTMLElement} wordSpan - The word span element
+ */
+function setInitialCursor(wordSpan) {
+    const firstChar = wordSpan.querySelector('.char');
+    if (firstChar) {
+        // Remove cursor from all characters first
+        wordsContainer.querySelectorAll('.char').forEach(char => {
+            char.classList.remove('cursor');
+        });
+        
+        // Add cursor to first character of new word
+        firstChar.classList.add('cursor');
+    }
 }
 
 /**
