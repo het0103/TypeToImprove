@@ -100,6 +100,16 @@ h1 {
     word-spacing: 0.5em;
     letter-spacing: 0.05em;
     font-weight: 400;
+    
+    /* Disable text selection and copying */
+    -webkit-user-select: none; /* Safari */
+    -moz-user-select: none;    /* Firefox */
+    -ms-user-select: none;     /* Internet Explorer/Edge */
+    user-select: none;         /* Standard syntax */
+    
+    /* Additional security measures */
+    -webkit-touch-callout: none; /* iOS Safari */
+    -webkit-tap-highlight-color: transparent; /* Remove tap highlights */
 }
 
 .words-container:empty::before {

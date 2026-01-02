@@ -285,7 +285,60 @@ function enableTypingInput() {
     typingInput.addEventListener('keydown', handleKeyDown);
     typingInput.addEventListener('input', handleInput);
     
+    // Security: Prevent all paste operations
+    typingInput.addEventListener('paste', preventPaste);
+    typingInput.addEventListener('drop', preventDrop);
+    typingInput.addEventListener('dragover', preventDragOver);
+    typingInput.addEventListener('contextmenu', preventContextMenu);
+    
     console.log('Typing input enabled and focused');
+}
+
+/**
+ * Security functions to prevent cheating
+ */
+
+/**
+ * Prevent paste operations in typing input
+ * @param {ClipboardEvent} event - The paste event
+ */
+function preventPaste(event) {
+    event.preventDefault();
+    event.stopPropagation();
+    console.log('Paste operation blocked for typing test integrity');
+    return false;
+}
+
+/**
+ * Prevent drag and drop operations in typing input
+ * @param {DragEvent} event - The drop event
+ */
+function preventDrop(event) {
+    event.preventDefault();
+    event.stopPropagation();
+    console.log('Drop operation blocked for typing test integrity');
+    return false;
+}
+
+/**
+ * Prevent drag over events (required for drop prevention)
+ * @param {DragEvent} event - The dragover event
+ */
+function preventDragOver(event) {
+    event.preventDefault();
+    event.stopPropagation();
+    return false;
+}
+
+/**
+ * Prevent context menu (right-click) on typing input
+ * @param {MouseEvent} event - The contextmenu event
+ */
+function preventContextMenu(event) {
+    event.preventDefault();
+    event.stopPropagation();
+    console.log('Context menu blocked on typing input for typing test integrity');
+    return false;
 }
 
 /**
@@ -409,6 +462,29 @@ function handleKeyDown(event) {
     // Don't process if test has ended
     if (testEnded) {
         return;
+    }
+    
+    // Security: Block paste keyboard shortcuts
+    if ((event.ctrlKey || event.metaKey) && (event.key === 'v' || event.key === 'V')) {
+        event.preventDefault();
+        event.stopPropagation();
+        console.log('Paste keyboard shortcut blocked for typing test integrity');
+        return false;
+    }
+    
+    // Security: Block other potentially problematic shortcuts
+    if ((event.ctrlKey || event.metaKey) && (
+        event.key === 'c' || event.key === 'C' || // Copy
+        event.key === 'x' || event.key === 'X' || // Cut
+        event.key === 'a' || event.key === 'A'    // Select All
+    )) {
+        // Allow these for the words container but not when typing input is focused
+        if (document.activeElement === typingInput) {
+            event.preventDefault();
+            event.stopPropagation();
+            console.log('Keyboard shortcut blocked while typing input is focused');
+            return false;
+        }
     }
     
     // Handle backspace for cross-word navigation
