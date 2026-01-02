@@ -21,6 +21,10 @@ let totalTypedCharacters = 0;
 // Character-level tracking
 let currentCharIndex = 0;
 
+// Difficulty tracking
+let currentDifficulty = 'medium';
+let difficultySelector = null;
+
 /**
  * Fisher-Yates shuffle algorithm for high randomness
  * This ensures each possible ordering of elements has equal probability
@@ -47,17 +51,24 @@ function shuffleArray(array) {
  * @returns {Array} - Array of randomly selected words
  */
 function generateRandomWords(count = 45) {
-    // Ensure we have access to the words array
-    if (typeof words === 'undefined' || !Array.isArray(words)) {
-        console.error('Words array not found. Make sure words.js is loaded.');
+    // Get words from selected difficulty level
+    let selectedWords;
+    
+    if (typeof wordsByDifficulty !== 'undefined' && wordsByDifficulty[currentDifficulty]) {
+        selectedWords = wordsByDifficulty[currentDifficulty];
+    } else if (typeof words !== 'undefined' && Array.isArray(words)) {
+        // Fallback to legacy words array
+        selectedWords = words;
+    } else {
+        console.error('No word lists found. Make sure words.js is loaded.');
         return [];
     }
     
     // Ensure we don't request more words than available
-    const wordCount = Math.min(count, words.length);
+    const wordCount = Math.min(count, selectedWords.length);
     
-    // Shuffle the entire word array and take the first 'count' words
-    const shuffledWords = shuffleArray(words);
+    // Shuffle the word array and take the first 'count' words
+    const shuffledWords = shuffleArray(selectedWords);
     
     return shuffledWords.slice(0, wordCount);
 }
@@ -496,13 +507,18 @@ function initializeTypingSession() {
         return;
     }
     
+    // Set up difficulty selector (only on first initialization)
+    if (!difficultySelector) {
+        setupDifficultySelector();
+    }
+    
     // Reset all statistics and state
     resetStatistics();
     
     // Generate random word count between 40-50 for variety
     const wordCount = Math.floor(Math.random() * 11) + 40; // 40 to 50 words
     
-    console.log(`Generating ${wordCount} random words for typing practice`);
+    console.log(`Generating ${wordCount} random words for ${currentDifficulty} difficulty`);
     
     // Generate random words
     const randomWords = generateRandomWords(wordCount);
@@ -549,6 +565,49 @@ function setupRestartButton() {
     restartButton.parentNode.replaceChild(newButton, restartButton);
     
     newButton.addEventListener('click', restartTest);
+}
+
+/**
+ * Set up the difficulty selector functionality
+ */
+function setupDifficultySelector() {
+    difficultySelector = document.getElementById('difficultySelector');
+    
+    if (!difficultySelector) {
+        console.error('Difficulty selector not found in DOM');
+        return;
+    }
+    
+    // Set initial difficulty from selector value
+    currentDifficulty = difficultySelector.value;
+    
+    // Add change event listener
+    difficultySelector.addEventListener('change', handleDifficultyChange);
+    
+    console.log(`Difficulty selector initialized with level: ${currentDifficulty}`);
+}
+
+/**
+ * Handle difficulty level change
+ */
+function handleDifficultyChange() {
+    if (testStarted && !testEnded) {
+        // If test is in progress, show confirmation
+        const confirmChange = confirm('Changing difficulty will restart the current test. Continue?');
+        if (!confirmChange) {
+            // Reset selector to current difficulty
+            difficultySelector.value = currentDifficulty;
+            return;
+        }
+    }
+    
+    // Update current difficulty
+    currentDifficulty = difficultySelector.value;
+    
+    console.log(`Difficulty changed to: ${currentDifficulty}`);
+    
+    // Restart the test with new difficulty
+    restartTest();
 }
 
 // Initialize when DOM is fully loaded

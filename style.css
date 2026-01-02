@@ -39,6 +39,46 @@ h1 {
     letter-spacing: -1px;
 }
 
+/* Difficulty selector */
+.difficulty-section {
+    text-align: center;
+    margin-bottom: 2rem;
+    padding: 1rem;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    border: 1px solid #e9ecef;
+}
+
+.difficulty-label {
+    display: inline-block;
+    font-size: 1rem;
+    color: #495057;
+    font-weight: 500;
+    margin-right: 0.75rem;
+}
+
+.difficulty-selector {
+    padding: 0.5rem 1rem;
+    font-size: 0.95rem;
+    border: 2px solid #e9ecef;
+    border-radius: 6px;
+    background-color: white;
+    color: #495057;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    min-width: 280px;
+}
+
+.difficulty-selector:hover {
+    border-color: #007bff;
+}
+
+.difficulty-selector:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+}
+
 /* Typing area */
 .typing-area {
     margin-bottom: 2rem;
@@ -287,6 +327,22 @@ h1 {
     
     h1 {
         font-size: 2rem;
+    }
+    
+    .difficulty-section {
+        padding: 0.75rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .difficulty-label {
+        display: block;
+        margin-bottom: 0.5rem;
+        margin-right: 0;
+    }
+    
+    .difficulty-selector {
+        min-width: 100%;
+        width: 100%;
     }
     
     .stats-section {

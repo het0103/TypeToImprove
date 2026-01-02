@@ -1,47 +1,92 @@
-// Common English words for typing practice
-// This array contains 300+ lowercase words suitable for typing exercises
+// TypeToImprove - Word Lists by Difficulty Level
+// This file contains categorized word lists for different typing skill levels
 
-const words = [
-    // Common short words (2-4 letters)
-    "the", "and", "for", "are", "but", "not", "you", "all", "can", "had", "her", "was", "one", "our", "out", "day", "get", "has", "him", "his", "how", "man", "new", "now", "old", "see", "two", "way", "who", "boy", "did", "its", "let", "put", "say", "she", "too", "use",
-    
-    // Common medium words (4-6 letters)
-    "about", "after", "again", "back", "been", "before", "being", "both", "came", "come", "could", "did", "each", "even", "first", "from", "good", "great", "have", "here", "home", "into", "just", "know", "last", "left", "like", "little", "look", "made", "make", "many", "more", "most", "move", "much", "must", "name", "never", "next", "only", "other", "over", "own", "right", "said", "same", "should", "show", "since", "some", "still", "such", "take", "than", "that", "them", "these", "they", "thing", "think", "this", "those", "time", "very", "want", "water", "well", "went", "were", "what", "when", "where", "which", "while", "will", "with", "work", "would", "write", "year", "your",
-    
-    // Nature and animals
-    "tree", "plant", "flower", "grass", "leaf", "bird", "fish", "dog", "cat", "horse", "cow", "sheep", "lion", "tiger", "bear", "deer", "fox", "wolf", "rabbit", "mouse", "duck", "chicken", "pig", "goat", "snake", "frog", "bee", "fly", "ant", "spider", "ocean", "sea", "lake", "river", "mountain", "hill", "forest", "desert", "beach", "island", "cloud", "rain", "snow", "wind", "sun", "moon", "star", "earth", "sky", "fire", "water", "stone", "rock", "sand", "ice", "wave", "storm", "summer", "winter", "spring", "fall",
-    
-    // Everyday objects
-    "book", "pen", "paper", "table", "chair", "door", "window", "house", "room", "bed", "car", "bus", "train", "bike", "road", "street", "city", "town", "shop", "store", "food", "bread", "milk", "meat", "fruit", "apple", "orange", "banana", "grape", "lemon", "potato", "tomato", "onion", "carrot", "lettuce", "rice", "pasta", "pizza", "cake", "cookie", "coffee", "tea", "juice", "water", "bottle", "cup", "plate", "spoon", "fork", "knife", "bowl", "bag", "box", "hat", "shirt", "pants", "shoes", "sock", "coat", "dress", "watch", "phone", "computer", "camera", "music", "song", "movie", "game", "ball", "toy",
-    
-    // Actions and verbs
-    "walk", "run", "jump", "sit", "stand", "sleep", "eat", "drink", "read", "write", "speak", "listen", "watch", "look", "see", "hear", "feel", "touch", "smell", "taste", "love", "like", "hate", "want", "need", "give", "take", "buy", "sell", "pay", "cost", "save", "spend", "earn", "work", "play", "learn", "teach", "study", "help", "ask", "tell", "talk", "call", "answer", "open", "close", "start", "stop", "begin", "end", "finish", "continue", "break", "fix", "build", "make", "create", "destroy", "clean", "wash", "cook", "drive", "ride", "fly", "swim", "dance", "sing", "laugh", "cry", "smile", "remember", "forget", "hope", "dream", "believe", "trust", "worry", "fear", "enjoy", "celebrate", "travel", "visit", "stay", "leave", "arrive", "return", "meet", "join", "follow", "lead", "win", "lose", "try", "succeed", "fail",
-    
-    // Descriptive words
-    "big", "small", "large", "tiny", "huge", "little", "tall", "short", "long", "wide", "narrow", "thick", "thin", "heavy", "light", "fast", "slow", "quick", "early", "late", "young", "old", "new", "fresh", "clean", "dirty", "hot", "cold", "warm", "cool", "dry", "wet", "hard", "soft", "smooth", "rough", "sharp", "dull", "bright", "dark", "loud", "quiet", "high", "low", "deep", "shallow", "full", "empty", "open", "closed", "easy", "hard", "simple", "difficult", "important", "special", "normal", "strange", "different", "similar", "same", "other", "another", "next", "last", "first", "final", "main", "basic", "common", "rare", "popular", "famous", "unknown", "public", "private", "free", "busy", "ready", "careful", "safe", "dangerous", "strong", "weak", "healthy", "sick", "happy", "sad", "angry", "calm", "excited", "bored", "tired", "active", "lazy", "smart", "stupid", "kind", "mean", "nice", "bad", "good", "great", "wonderful", "terrible", "beautiful", "ugly", "pretty", "cute", "funny", "serious", "interesting", "boring",
-    
-    // Colors
-    "red", "blue", "green", "yellow", "orange", "purple", "pink", "brown", "black", "white", "gray", "silver", "gold",
-    
-    // Numbers and time
-    "zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "hundred", "thousand", "million", "today", "yesterday", "tomorrow", "morning", "afternoon", "evening", "night", "hour", "minute", "second", "week", "month", "year", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday", "january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december",
-    
-    // People and relationships
-    "person", "people", "man", "woman", "child", "baby", "boy", "girl", "father", "mother", "parent", "son", "daughter", "brother", "sister", "family", "friend", "neighbor", "teacher", "student", "doctor", "nurse", "police", "farmer", "worker", "boss", "customer", "visitor", "guest", "stranger",
-    
-    // Body parts
-    "head", "hair", "face", "eye", "nose", "mouth", "ear", "neck", "shoulder", "arm", "hand", "finger", "leg", "foot", "toe", "back", "chest", "heart", "brain", "blood", "bone", "skin", "tooth", "teeth",
-    
-    // Places and locations
-    "place", "country", "state", "city", "town", "village", "street", "road", "park", "garden", "school", "office", "hospital", "church", "library", "museum", "restaurant", "hotel", "bank", "post", "market", "shop", "store", "factory", "farm", "beach", "mountain", "forest", "river", "bridge", "building", "tower", "castle", "palace"
-];
+const wordsByDifficulty = {
+    easy: [
+        // Simple short words (2-4 letters)
+        "the", "and", "for", "are", "but", "not", "you", "all", "can", "had", "her", "was", "one", "our", "out", "day", "get", "has", "him", "his", "how", "man", "new", "now", "old", "see", "two", "way", "who", "boy", "did", "its", "let", "put", "say", "she", "too", "use",
+        
+        // Basic colors and numbers
+        "red", "blue", "green", "big", "run", "sit", "eat", "go", "up", "in", "on", "at", "to", "is", "it", "we", "my", "me", "do", "no", "he", "be", "so", "or", "if", "by", "as", "an", "us", "am",
+        
+        // Simple nouns
+        "cat", "dog", "car", "sun", "moon", "tree", "book", "pen", "cup", "bag", "box", "hat", "bed", "door", "key", "toy", "ball", "game", "food", "milk", "cake", "fish", "bird", "hand", "head", "eye", "ear", "leg", "arm", "foot"
+    ],
 
-// Export the words array for use in other files
+    medium: [
+        // Common medium words (4-6 letters)
+        "about", "after", "again", "back", "been", "before", "being", "both", "came", "come", "could", "each", "even", "first", "from", "good", "great", "have", "here", "home", "into", "just", "know", "last", "left", "like", "little", "look", "made", "make", "many", "more", "most", "move", "much", "must", "name", "never", "next", "only", "other", "over", "right", "said", "same", "should", "show", "since", "some", "still", "such", "take", "than", "that", "them", "these", "they", "thing", "think", "this", "those", "time", "very", "want", "water", "well", "went", "were", "what", "when", "where", "which", "while", "will", "with", "work", "would", "write", "year", "your",
+        
+        // Nature and animals
+        "horse", "sheep", "tiger", "rabbit", "chicken", "forest", "ocean", "mountain", "river", "beach", "flower", "plant", "grass", "cloud", "storm", "winter", "summer", "spring",
+        
+        // Actions
+        "walk", "jump", "stand", "sleep", "drink", "speak", "listen", "watch", "learn", "teach", "help", "start", "finish", "travel", "visit", "remember", "forget", "smile", "laugh"
+    ],
+
+    hard: [
+        // Complex and longer words
+        "different", "important", "remember", "understand", "beautiful", "wonderful", "dangerous", "interesting", "necessary", "government", "development", "environment", "management", "information", "technology", "organization", "communication", "international", "professional", "responsibility", "opportunity", "experience", "performance", "relationship", "achievement", "knowledge", "education", "particular", "individual", "available", "successful", "commercial", "financial", "political", "scientific", "economic", "historical", "psychological", "philosophical", "theoretical", "practical", "technical", "medical", "physical", "chemical", "biological", "mathematical", "statistical", "ographical", "ographical",
+        
+        // Academic and business terms
+        "analysis", "research", "strategy", "process", "structure", "function", "method", "approach", "concept", "principle", "framework", "perspective", "criteria", "evaluation", "assessment", "implementation", "application", "integration", "coordination", "collaboration", "negotiation", "presentation", "discussion", "conclusion", "recommendation", "interpretation", "explanation", "description", "definition", "classification", "specification", "documentation", "administration", "supervision", "leadership", "partnership", "membership", "citizenship", "ownership", "relationship", "scholarship", "championship", "friendship", "hardship", "workmanship"
+    ],
+
+    developer: [
+        // JavaScript keywords and reserved words
+        "function", "var", "let", "const", "if", "else", "for", "while", "do", "switch", "case", "default", "break", "continue", "return", "try", "catch", "finally", "throw", "new", "this", "super", "class", "extends", "static", "async", "await", "yield", "import", "export", "from", "as", "default", "typeof", "instanceof", "in", "of", "delete", "void", "true", "false", "null", "undefined", "NaN", "Infinity",
+        
+        // JavaScript built-in objects and methods
+        "Array", "Object", "String", "Number", "Boolean", "Date", "Math", "JSON", "Promise", "Set", "Map", "WeakSet", "WeakMap", "Symbol", "Proxy", "Reflect", "console.log()", "console.error()", "console.warn()", "console.info()", "parseInt()", "parseFloat()", "isNaN()", "isFinite()", "toString()", "valueOf()", "hasOwnProperty()", "propertyIsEnumerable()",
+        
+        // Array methods
+        "push()", "pop()", "shift()", "unshift()", "slice()", "splice()", "concat()", "join()", "reverse()", "sort()", "indexOf()", "lastIndexOf()", "includes()", "find()", "findIndex()", "filter()", "map()", "reduce()", "reduceRight()", "forEach()", "some()", "every()", "flat()", "flatMap()",
+        
+        // String methods
+        "charAt()", "charCodeAt()", "codePointAt()", "concat()", "endsWith()", "includes()", "indexOf()", "lastIndexOf()", "match()", "padEnd()", "padStart()", "repeat()", "replace()", "replaceAll()", "search()", "slice()", "split()", "startsWith()", "substring()", "toLowerCase()", "toUpperCase()", "trim()", "trimStart()", "trimEnd()",
+        
+        // Operators and symbols
+        "===", "!==", "==", "!=", "<=", ">=", "<", ">", "&&", "||", "!", "?:", "??", "??=", "+=", "-=", "*=", "/=", "%=", "**=", "&=", "|=", "^=", "<<=", ">>=", ">>>=", "++", "--", "...", "=>", "?.","[]", "{}", "()",
+        
+        // Common code patterns and snippets
+        "async/await", "try/catch", "if/else", "for/of", "for/in", "while(true)", "setTimeout()", "setInterval()", "clearTimeout()", "clearInterval()", "addEventListener()", "removeEventListener()", "preventDefault()", "stopPropagation()", "fetch()", "axios.get()", "axios.post()", "JSON.stringify()", "JSON.parse()",
+        
+        // DOM manipulation
+        "document", "window", "getElementById()", "getElementsByClassName()", "getElementsByTagName()", "querySelector()", "querySelectorAll()", "createElement()", "appendChild()", "removeChild()", "insertBefore()", "cloneNode()", "setAttribute()", "getAttribute()", "removeAttribute()", "classList", "innerHTML", "textContent", "innerText", "style", "onclick", "onload", "onchange",
+        
+        // React/JSX specific
+        "useState()", "useEffect()", "useContext()", "useReducer()", "useMemo()", "useCallback()", "useRef()", "useImperativeHandle()", "useLayoutEffect()", "useDebugValue()", "React.Component", "React.Fragment", "ReactDOM.render()", "props", "state", "setState()", "componentDidMount()", "componentDidUpdate()", "componentWillUnmount()", "render()", "jsx", "tsx",
+        
+        // Node.js and backend
+        "require()", "module.exports", "exports", "__dirname", "__filename", "process.env", "process.argv", "Buffer", "fs", "path", "http", "https", "url", "querystring", "crypto", "os", "util", "events", "stream", "readline", "child_process", "cluster", "worker_threads", "express()", "app.get()", "app.post()", "app.listen()", "req", "res", "next()", "middleware",
+        
+        // Package managers and tools
+        "npm", "yarn", "package.json", "node_modules", "npm install", "npm start", "npm test", "npm run", "webpack", "babel", "eslint", "prettier", "typescript", "tsc", "tsconfig.json", ".env", "dotenv", "jest", "mocha", "chai", "cypress", "selenium",
+        
+        // Git commands (as single tokens)
+        "git", "init", "clone", "add", "commit", "push", "pull", "fetch", "merge", "rebase", "branch", "checkout", "reset", "log", "status", "diff", "stash", "remote", "origin", "master", "main", "develop", "feature", "hotfix",
+        
+        // Database and queries
+        "SELECT", "INSERT", "UPDATE", "DELETE", "FROM", "WHERE", "JOIN", "LEFT", "RIGHT", "INNER", "OUTER", "GROUP", "ORDER", "BY", "HAVING", "LIMIT", "OFFSET", "COUNT", "SUM", "AVG", "MIN", "MAX", "DISTINCT", "UNION", "CREATE", "DROP", "ALTER", "INDEX", "PRIMARY", "FOREIGN", "KEY", "NULL", "NOT", "AND", "OR",
+        
+        // CSS selectors and properties
+        "display", "position", "flex", "grid", "margin", "padding", "border", "width", "height", "color", "background", "font-size", "font-family", "text-align", "justify-content", "align-items", "flex-direction", "grid-template", "z-index", "opacity", "transform", "transition", "animation", "hover", "focus", "active", "nth-child", "first-child", "last-child", "::before", "::after",
+        
+        // HTTP and API
+        "GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS", "HEAD", "200", "201", "204", "301", "302", "304", "400", "401", "403", "404", "409", "422", "429", "500", "502", "503", "504", "Content-Type", "Authorization", "Accept", "User-Agent", "Cache-Control", "ETag", "CORS", "REST", "GraphQL", "API", "endpoint", "middleware", "rate-limit"
+    ]
+};
+
+// Legacy support - default to medium difficulty
+const words = wordsByDifficulty.medium;
+
+// Export both the categorized words and legacy words array
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = words;
+    module.exports = { wordsByDifficulty, words };
 }
 
 // For browser environments
 if (typeof window !== 'undefined') {
+    window.wordsByDifficulty = wordsByDifficulty;
     window.words = words;
 }
