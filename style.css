@@ -52,18 +52,31 @@ h1 {
     min-height: 120px;
     font-size: 1.2rem;
     line-height: 1.8;
-    color: #6c757d;
-    text-align: center;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    color: #333;
+    text-align: left;
     margin-bottom: 1rem;
+    overflow-wrap: break-word;
+    word-spacing: 0.3em;
 }
 
 .words-container:empty::before {
     content: "Words will appear here when you start typing practice";
     font-style: italic;
     color: #adb5bd;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 90px;
+}
+
+/* Individual word styling */
+.words-container .word {
+    display: inline;
+    padding: 2px 1px;
+    border-radius: 3px;
+    transition: background-color 0.2s ease;
+    font-weight: 400;
+    color: #495057;
 }
 
 .typing-input {
