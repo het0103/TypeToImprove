@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TypeToImprove - Typing Practice</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>TypeToImprove</h1>
+        </header>
+        
+        <main>
+            <div class="typing-area">
+                <div class="words-container" id="wordsContainer">
+                    <!-- Words will be displayed here -->
+                </div>
+                
+                <input 
+                    type="text" 
+                    id="typingInput" 
+                    class="typing-input" 
+                    placeholder="Start typing here..." 
+                    disabled
+                >
+            </div>
+            
+            <div class="stats-section">
+                <div class="timer-section">
+                    <h3>Timer</h3>
+                    <div id="timer" class="timer-display">--:--</div>
+                </div>
+                
+                <div class="results-section">
+                    <h3>Results</h3>
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <span class="stat-label">WPM:</span>
+                            <span id="wpm" class="stat-value">--</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Accuracy:</span>
+                            <span id="accuracy" class="stat-value">--%</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Errors:</span>
+                            <span id="errors" class="stat-value">--</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <script src="script.js"></script>
+</body>
+</html>

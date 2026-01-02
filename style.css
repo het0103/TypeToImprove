@@ -1,0 +1,172 @@
+/* Reset and base styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f8f9fa;
+    color: #333;
+    line-height: 1.6;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Main container */
+.container {
+    max-width: 800px;
+    width: 90%;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    padding: 2rem;
+}
+
+/* Header */
+header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+h1 {
+    font-size: 2.5rem;
+    color: #2c3e50;
+    font-weight: 300;
+    letter-spacing: -1px;
+}
+
+/* Typing area */
+.typing-area {
+    margin-bottom: 2rem;
+}
+
+.words-container {
+    background-color: #f8f9fa;
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    padding: 1.5rem;
+    min-height: 120px;
+    font-size: 1.2rem;
+    line-height: 1.8;
+    color: #6c757d;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1rem;
+}
+
+.words-container:empty::before {
+    content: "Words will appear here when you start typing practice";
+    font-style: italic;
+    color: #adb5bd;
+}
+
+.typing-input {
+    width: 100%;
+    padding: 1rem;
+    font-size: 1.1rem;
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    outline: none;
+    transition: border-color 0.3s ease;
+    background-color: #f8f9fa;
+    color: #6c757d;
+}
+
+.typing-input:focus {
+    border-color: #007bff;
+    background-color: white;
+    color: #333;
+}
+
+.typing-input:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+/* Stats section */
+.stats-section {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 2rem;
+    padding-top: 2rem;
+    border-top: 1px solid #e9ecef;
+}
+
+.timer-section,
+.results-section {
+    text-align: center;
+}
+
+.timer-section h3,
+.results-section h3 {
+    font-size: 1.2rem;
+    color: #495057;
+    margin-bottom: 1rem;
+    font-weight: 500;
+}
+
+.timer-display {
+    font-size: 2rem;
+    font-weight: 300;
+    color: #6c757d;
+    font-variant-numeric: tabular-nums;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+}
+
+.stat-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0.5rem;
+}
+
+.stat-label {
+    font-size: 0.9rem;
+    color: #6c757d;
+    margin-bottom: 0.25rem;
+}
+
+.stat-value {
+    font-size: 1.5rem;
+    font-weight: 500;
+    color: #495057;
+    font-variant-numeric: tabular-nums;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .container {
+        width: 95%;
+        padding: 1.5rem;
+    }
+    
+    h1 {
+        font-size: 2rem;
+    }
+    
+    .stats-section {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+    
+    .stats-grid {
+        grid-template-columns: 1fr;
+        gap: 0.5rem;
+    }
+    
+    .stat-item {
+        flex-direction: row;
+        justify-content: space-between;
+    }
+}
