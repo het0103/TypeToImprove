@@ -7,6 +7,17 @@ let displayedWords = [];
 let typingInput = null;
 let wordsContainer = null;
 
+// Timer and statistics variables
+let testDuration = 60; // 60 seconds default
+let timeRemaining = testDuration;
+let timerInterval = null;
+let testStarted = false;
+let testEnded = false;
+let startTime = null;
+let correctWords = 0;
+let incorrectWords = 0;
+let totalTypedCharacters = 0;
+
 /**
  * Fisher-Yates shuffle algorithm for high randomness
  * This ensures each possible ordering of elements has equal probability
@@ -91,6 +102,137 @@ function displayWords(wordArray) {
 }
 
 /**
+ * Start the typing timer
+ */
+function startTimer() {
+    if (testStarted || testEnded) {
+        return;
+    }
+    
+    testStarted = true;
+    startTime = new Date();
+    
+    // Update timer display immediately
+    updateTimerDisplay();
+    
+    // Start the countdown
+    timerInterval = setInterval(() => {
+        timeRemaining--;
+        updateTimerDisplay();
+        
+        if (timeRemaining <= 0) {
+            endTest();
+        }
+    }, 1000);
+    
+    console.log('Timer started');
+}
+
+/**
+ * Update the timer display
+ */
+function updateTimerDisplay() {
+    const timerElement = document.getElementById('timer');
+    if (timerElement) {
+        const minutes = Math.floor(timeRemaining / 60);
+        const seconds = timeRemaining % 60;
+        timerElement.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+    }
+}
+
+/**
+ * End the typing test and calculate results
+ */
+function endTest() {
+    testEnded = true;
+    
+    // Stop the timer
+    if (timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+    }
+    
+    // Disable input
+    if (typingInput) {
+        typingInput.disabled = true;
+        typingInput.placeholder = 'Test completed!';
+    }
+    
+    // Calculate and display results
+    calculateAndDisplayResults();
+    
+    console.log('Test ended');
+}
+
+/**
+ * Calculate WPM, accuracy, and errors, then display results
+ */
+function calculateAndDisplayResults() {
+    const totalWords = correctWords + incorrectWords;
+    const accuracy = totalWords > 0 ? Math.round((correctWords / totalWords) * 100) : 0;
+    
+    // Calculate WPM based on actual time elapsed
+    const timeElapsed = testStarted && startTime ? 
+        Math.min((new Date() - startTime) / 1000, testDuration) / 60 : 1;
+    const wpm = Math.round(correctWords / timeElapsed);
+    
+    // Update display
+    const wpmElement = document.getElementById('wpm');
+    const accuracyElement = document.getElementById('accuracy');
+    const errorsElement = document.getElementById('errors');
+    
+    if (wpmElement) wpmElement.textContent = wpm;
+    if (accuracyElement) accuracyElement.textContent = `${accuracy}%`;
+    if (errorsElement) errorsElement.textContent = incorrectWords;
+    
+    console.log(`Results - WPM: ${wpm}, Accuracy: ${accuracy}%, Errors: ${incorrectWords}`);
+}
+
+/**
+ * Reset all statistics and state variables
+ */
+function resetStatistics() {
+    currentWordIndex = 0;
+    displayedWords = [];
+    timeRemaining = testDuration;
+    testStarted = false;
+    testEnded = false;
+    startTime = null;
+    correctWords = 0;
+    incorrectWords = 0;
+    totalTypedCharacters = 0;
+    
+    if (timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+    }
+    
+    // Reset display
+    updateTimerDisplay();
+    
+    const wpmElement = document.getElementById('wpm');
+    const accuracyElement = document.getElementById('accuracy');
+    const errorsElement = document.getElementById('errors');
+    
+    if (wpmElement) wpmElement.textContent = '--';
+    if (accuracyElement) accuracyElement.textContent = '--%';
+    if (errorsElement) errorsElement.textContent = '--';
+}
+
+/**
+ * Restart the typing test
+ */
+function restartTest() {
+    console.log('Restarting test...');
+    
+    // Reset all statistics
+    resetStatistics();
+    
+    // Regenerate and display new words
+    initializeTypingSession();
+}
+
+/**
  * Enable the typing input field and set up event listeners
  */
 function enableTypingInput() {
@@ -116,6 +258,11 @@ function enableTypingInput() {
  * @param {KeyboardEvent} event - The keydown event
  */
 function handleKeyDown(event) {
+    // Start timer on first keystroke
+    if (!testStarted && !testEnded) {
+        startTimer();
+    }
+    
     // Check if spacebar was pressed
     if (event.code === 'Space') {
         event.preventDefault(); // Prevent default space behavior
@@ -127,11 +274,19 @@ function handleKeyDown(event) {
  * Handle word submission when spacebar is pressed
  */
 function handleWordSubmission() {
+    // Don't process if test has ended
+    if (testEnded) {
+        return;
+    }
+    
     const typedWord = typingInput.value.trim();
     
     if (typedWord === '') {
         return; // Don't process empty submissions
     }
+    
+    // Track typed characters
+    totalTypedCharacters += typedWord.length;
     
     // Get the current word that should be typed
     const currentWord = displayedWords[currentWordIndex];
@@ -152,6 +307,13 @@ function handleWordSubmission() {
     // Compare typed word with current word
     const isCorrect = typedWord === currentWord;
     
+    // Update statistics
+    if (isCorrect) {
+        correctWords++;
+    } else {
+        incorrectWords++;
+    }
+    
     // Update visual feedback
     currentWordSpan.classList.remove('active');
     currentWordSpan.classList.add(isCorrect ? 'correct' : 'incorrect');
@@ -162,18 +324,17 @@ function handleWordSubmission() {
     // Move to next word
     currentWordIndex++;
     
-    // Check if there are more words
-    if (currentWordIndex < displayedWords.length) {
+    // Check if there are more words and test hasn't ended
+    if (currentWordIndex < displayedWords.length && !testEnded) {
         // Mark next word as active
         const nextWordSpan = wordsContainer.querySelector(`[data-index="${currentWordIndex}"]`);
         if (nextWordSpan) {
             nextWordSpan.classList.add('active');
         }
-    } else {
-        // All words completed
+    } else if (!testEnded) {
+        // All words completed before time ended
         console.log('All words completed!');
-        typingInput.disabled = true;
-        typingInput.placeholder = 'Typing practice completed!';
+        endTest();
     }
     
     console.log(`Word "${typedWord}" ${isCorrect ? 'correct' : 'incorrect'}. Expected: "${currentWord}"`);
@@ -193,9 +354,8 @@ function initializeTypingSession() {
         return;
     }
     
-    // Reset state variables
-    currentWordIndex = 0;
-    displayedWords = [];
+    // Reset all statistics and state
+    resetStatistics();
     
     // Generate random word count between 40-50 for variety
     const wordCount = Math.floor(Math.random() * 11) + 40; // 40 to 50 words
@@ -216,7 +376,37 @@ function initializeTypingSession() {
     // Enable typing input
     enableTypingInput();
     
+    // Set up restart button
+    setupRestartButton();
+    
     console.log(`Successfully displayed ${randomWords.length} words and enabled typing`);
+}
+
+/**
+ * Set up the restart button functionality
+ */
+function setupRestartButton() {
+    // Create restart button if it doesn't exist
+    let restartButton = document.getElementById('restartButton');
+    
+    if (!restartButton) {
+        restartButton = document.createElement('button');
+        restartButton.id = 'restartButton';
+        restartButton.className = 'restart-button';
+        restartButton.textContent = 'Restart Test';
+        
+        // Add button to the stats section
+        const statsSection = document.querySelector('.stats-section');
+        if (statsSection) {
+            statsSection.appendChild(restartButton);
+        }
+    }
+    
+    // Remove existing event listeners and add new one
+    const newButton = restartButton.cloneNode(true);
+    restartButton.parentNode.replaceChild(newButton, restartButton);
+    
+    newButton.addEventListener('click', restartTest);
 }
 
 // Initialize when DOM is fully loaded
