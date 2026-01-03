@@ -892,10 +892,17 @@ function initializeTypingSession() {
     // Reset all statistics and state
     resetStatistics();
     
-    // Generate random word count between 40-50 for variety
-    const wordCount = Math.floor(Math.random() * 11) + 40; // 40 to 50 words
-    
-    console.log(`Generating ${wordCount} random words for ${currentDifficulty} difficulty`);
+    // Generate appropriate word count based on current mode
+    let wordCount;
+    if (selectedTestMode === 'words') {
+        // Words Mode: Generate exactly the required number of words
+        wordCount = selectedWordsValue;
+        console.log(`Words Mode: Generating exactly ${wordCount} words`);
+    } else {
+        // Time Mode: Generate random word count between 40-50 for variety
+        wordCount = Math.floor(Math.random() * 11) + 40; // 40 to 50 words
+        console.log(`Time Mode: Generating ${wordCount} random words for ${currentDifficulty} difficulty`);
+    }
     
     // Generate random words
     const randomWords = generateRandomWords(wordCount);
@@ -1030,7 +1037,7 @@ function setupModeUI() {
                 
                 // Reset test and regenerate words when mode changes
                 resetTypingTest();
-                const wordArray = generateRandomWords(Math.max(selectedWordsValue + 20, 45));
+                const wordArray = generateRandomWords(selectedWordsValue);
                 displayWords(wordArray);
                 
                 // Automatically focus input after mode change
@@ -1067,7 +1074,7 @@ function setupModeUI() {
                 
                 // Reset test and regenerate words when word count changes
                 resetTypingTest();
-                const wordArray = generateRandomWords(Math.max(selectedWordsValue + 20, 45));
+                const wordArray = generateRandomWords(selectedWordsValue);
                 displayWords(wordArray);
                 
                 // Automatically focus input after word count change
