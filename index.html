@@ -25,6 +25,30 @@
             </select>
         </div>
         
+        <!-- Test Mode Selector -->
+        <div class="mode-section">
+            <div class="mode-controls">
+                <div class="mode-toggle">
+                    <input type="radio" id="timeMode" name="testMode" value="time" checked>
+                    <label for="timeMode">Time Mode</label>
+                    <input type="radio" id="wordsMode" name="testMode" value="words">
+                    <label for="wordsMode">Words Mode</label>
+                </div>
+                
+                <div class="time-options" id="timeOptions">
+                    <button class="mode-option" data-time="15">15s</button>
+                    <button class="mode-option active" data-time="30">30s</button>
+                    <button class="mode-option" data-time="60">60s</button>
+                </div>
+                
+                <div class="words-options" id="wordsOptions" style="display: none;">
+                    <button class="mode-option" data-words="25">25</button>
+                    <button class="mode-option active" data-words="50">50</button>
+                    <button class="mode-option" data-words="100">100</button>
+                </div>
+            </div>
+        </div>
+        
         <main>
             <div class="typing-area">
                 <div class="words-container" id="wordsContainer">

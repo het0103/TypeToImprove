@@ -19,6 +19,11 @@ let incorrectWords = 0;
 let completedWordCount = 0; // Tracks only words completed with space key
 let totalTypedCharacters = 0;
 
+// Test mode selection state
+let selectedTestMode = 'time';  // 'time' or 'words'
+let selectedTimeValue = 30;     // seconds (15, 30, 60)
+let selectedWordsValue = 50;    // words (25, 50, 100)
+
 // Character-level tracking
 let currentCharIndex = 0;
 
@@ -143,6 +148,17 @@ function startTimer() {
     testStarted = true;
     startTime = new Date();
     
+    // Apply mode settings
+    if (selectedTestMode === 'time') {
+        // Set duration and remaining time based on selected time value
+        testDuration = selectedTimeValue;
+        timeRemaining = selectedTimeValue;
+    } else if (selectedTestMode === 'words') {
+        // For Words Mode, set a high timer value (won't be used for ending)
+        testDuration = 999;
+        timeRemaining = 999;
+    }
+    
     // Update timer display immediately
     updateTimerDisplay();
     
@@ -151,12 +167,13 @@ function startTimer() {
         timeRemaining--;
         updateTimerDisplay();
         
-        if (timeRemaining <= 0) {
+        // Only end test on timer if in Time Mode
+        if (timeRemaining <= 0 && selectedTestMode === 'time') {
             endTest();
         }
     }, 1000);
     
-    console.log('Timer started');
+    console.log(`Timer started - Mode: ${selectedTestMode}, Duration: ${testDuration}s`);
 }
 
 /**
@@ -583,6 +600,13 @@ function handleSpacePress() {
         // Only increment completed word count when space is pressed AND text was typed
         completedWordCount++;
         
+        // Check if Words Mode target is reached
+        if (selectedTestMode === 'words' && completedWordCount >= selectedWordsValue) {
+            console.log(`Words Mode completed: ${completedWordCount}/${selectedWordsValue} words`);
+            endTest();
+            return;
+        }
+        
         // Process the typed word
         processCurrentWord(typedText);
     }
@@ -661,8 +685,8 @@ function moveToNextWord() {
             nextWordSpan.classList.add('active');
             setInitialCursor(nextWordSpan);
         }
-    } else if (!testEnded) {
-        // All words completed before time ended
+    } else if (!testEnded && selectedTestMode === 'time') {
+        // All words completed in Time Mode
         console.log('All words completed!');
         endTest();
     }
@@ -839,9 +863,65 @@ function handleDifficultyChange() {
     restartTest();
 }
 
+/**
+ * Setup mode selection UI interactions
+ */
+function setupModeUI() {
+    // Get radio buttons
+    const timeModeRadio = document.getElementById('timeMode');
+    const wordsModeRadio = document.getElementById('wordsMode');
+    
+    // Get option containers
+    const timeOptions = document.getElementById('timeOptions');
+    const wordsOptions = document.getElementById('wordsOptions');
+    
+    if (timeModeRadio && wordsModeRadio && timeOptions && wordsOptions) {
+        // Add event listeners for radio buttons
+        timeModeRadio.addEventListener('change', function() {
+            if (this.checked) {
+                selectedTestMode = 'time';
+                timeOptions.style.display = 'flex';
+                wordsOptions.style.display = 'none';
+                console.log(`Test mode changed to: ${selectedTestMode}`);
+            }
+        });
+        
+        wordsModeRadio.addEventListener('change', function() {
+            if (this.checked) {
+                selectedTestMode = 'words';
+                timeOptions.style.display = 'none';
+                wordsOptions.style.display = 'flex';
+                console.log(`Test mode changed to: ${selectedTestMode}`);
+            }
+        });
+        
+        // Add event listeners for option buttons
+        const timeButtons = timeOptions.querySelectorAll('.mode-option');
+        timeButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                timeButtons.forEach(btn => btn.classList.remove('active'));
+                this.classList.add('active');
+                selectedTimeValue = parseInt(this.dataset.time);
+                console.log(`Time value selected: ${selectedTimeValue}s`);
+            });
+        });
+        
+        const wordsButtons = wordsOptions.querySelectorAll('.mode-option');
+        wordsButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                wordsButtons.forEach(btn => btn.classList.remove('active'));
+                this.classList.add('active');
+                selectedWordsValue = parseInt(this.dataset.words);
+                console.log(`Words value selected: ${selectedWordsValue} words`);
+            });
+        });
+    }
+}
+
 // Initialize when DOM is fully loaded
 document.addEventListener('DOMContentLoaded', function() {
     console.log('TypeToImprove loaded - DOM ready');
+    setupModeUI();
     initializeTypingSession();
 });
 

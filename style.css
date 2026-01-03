@@ -79,6 +79,68 @@ h1 {
     box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
 }
 
+/* Test Mode Selector */
+.mode-section {
+    text-align: center;
+    margin-bottom: 2rem;
+    padding: 1rem;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    border: 1px solid #e9ecef;
+}
+
+.mode-controls {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+}
+
+.mode-toggle {
+    display: flex;
+    gap: 2rem;
+    margin-bottom: 0.5rem;
+}
+
+.mode-toggle input[type="radio"] {
+    margin-right: 0.5rem;
+}
+
+.mode-toggle label {
+    font-size: 1rem;
+    color: #495057;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.time-options, .words-options {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.mode-option {
+    padding: 0.5rem 1rem;
+    background-color: white;
+    border: 2px solid #e9ecef;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    color: #495057;
+    transition: all 0.3s ease;
+    min-width: 50px;
+}
+
+.mode-option:hover {
+    border-color: #007bff;
+    background-color: #f0f9ff;
+}
+
+.mode-option.active {
+    background-color: #007bff;
+    color: white;
+    border-color: #007bff;
+}
+
 /* Typing area */
 .typing-area {
     margin-bottom: 2rem;
