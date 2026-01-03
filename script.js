@@ -393,6 +393,21 @@ function resetTypingTest() {
 }
 
 /**
+ * Focus the typing input field for better UX
+ * Call this after mode/setting changes to eliminate need for manual clicking
+ */
+function focusTypingInput() {
+    const typingInput = document.getElementById('typingInput');
+    if (typingInput && !typingInput.disabled) {
+        // Use setTimeout to ensure DOM updates are complete
+        setTimeout(() => {
+            typingInput.focus();
+            console.log('Typing input focused automatically');
+        }, 50);
+    }
+}
+
+/**
  * Enable the typing input field and set up event listeners
  */
 function enableTypingInput() {
@@ -970,6 +985,9 @@ function handleDifficultyChange() {
     
     // Restart the test with new difficulty
     restartTest();
+    
+    // Automatically focus input after difficulty change
+    focusTypingInput();
 }
 
 /**
@@ -997,6 +1015,9 @@ function setupModeUI() {
                 resetTypingTest();
                 const wordArray = generateRandomWords(45);
                 displayWords(wordArray);
+                
+                // Automatically focus input after mode change
+                focusTypingInput();
             }
         });
         
@@ -1011,6 +1032,9 @@ function setupModeUI() {
                 resetTypingTest();
                 const wordArray = generateRandomWords(Math.max(selectedWordsValue + 20, 45));
                 displayWords(wordArray);
+                
+                // Automatically focus input after mode change
+                focusTypingInput();
             }
         });
         
@@ -1027,6 +1051,9 @@ function setupModeUI() {
                 resetTypingTest();
                 const wordArray = generateRandomWords(45);
                 displayWords(wordArray);
+                
+                // Automatically focus input after time duration change
+                focusTypingInput();
             });
         });
         
@@ -1042,6 +1069,9 @@ function setupModeUI() {
                 resetTypingTest();
                 const wordArray = generateRandomWords(Math.max(selectedWordsValue + 20, 45));
                 displayWords(wordArray);
+                
+                // Automatically focus input after word count change
+                focusTypingInput();
             });
         });
     }
