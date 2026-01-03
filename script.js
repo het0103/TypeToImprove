@@ -154,26 +154,35 @@ function startTimer() {
         testDuration = selectedTimeValue;
         timeRemaining = selectedTimeValue;
     } else if (selectedTestMode === 'words') {
-        // For Words Mode, set a high timer value (won't be used for ending)
+        // For Words Mode, set high duration but start elapsed time at 0
         testDuration = 999;
-        timeRemaining = 999;
+        timeRemaining = 0; // Will count up to show elapsed time
     }
     
     // Update timer display immediately
     updateTimerDisplay();
     
-    // Start the countdown
+    // Start unified timer that works for BOTH modes
     timerInterval = setInterval(() => {
-        timeRemaining--;
-        updateTimerDisplay();
-        
-        // Only end test on timer if in Time Mode
-        if (timeRemaining <= 0 && selectedTestMode === 'time') {
-            endTest();
+        if (selectedTestMode === 'time') {
+            // Time Mode: Count down
+            timeRemaining--;
+            updateTimerDisplay();
+            
+            // End test when countdown reaches 0
+            if (timeRemaining <= 0) {
+                endTest();
+            }
+        } else if (selectedTestMode === 'words') {
+            // Words Mode: Count up (elapsed time)
+            timeRemaining++;
+            updateTimerDisplay();
+            
+            // Words Mode ending is handled elsewhere by word count
         }
     }, 1000);
     
-    console.log(`Timer started - Mode: ${selectedTestMode}, Duration: ${testDuration}s`);
+    console.log(`Timer started - Mode: ${selectedTestMode}, ${selectedTestMode === 'time' ? 'Countdown' : 'Count-up'} timer active`);
 }
 
 /**
@@ -221,8 +230,19 @@ function calculateAndDisplayResults() {
     const accuracy = totalWords > 0 ? Math.round((correctWords / totalWords) * 100) : 0;
     
     // Calculate WPM based on actual time elapsed
-    const timeElapsed = testStarted && startTime ? 
-        Math.min((new Date() - startTime) / 1000, testDuration) / 60 : 1;
+    let timeElapsed;
+    if (testStarted && startTime) {
+        if (selectedTestMode === 'time') {
+            // In Time Mode, cap at testDuration
+            timeElapsed = Math.min((new Date() - startTime) / 1000, testDuration) / 60;
+        } else {
+            // In Words Mode, use actual elapsed time (no cap)
+            timeElapsed = (new Date() - startTime) / 1000 / 60;
+        }
+    } else {
+        timeElapsed = 1; // Fallback
+    }
+    
     const wpm = Math.round(correctWords / timeElapsed);
     
     // Update display
@@ -244,7 +264,6 @@ function resetStatistics() {
     currentWordIndex = 0;
     displayedWords = [];
     currentCharIndex = 0;
-    timeRemaining = testDuration;
     testStarted = false;
     testEnded = false;
     startTime = null;
@@ -253,9 +272,23 @@ function resetStatistics() {
     completedWordCount = 0; // Reset completed word count
     totalTypedCharacters = 0;
     
+    // Stop and clear any running timer
     if (timerInterval) {
         clearInterval(timerInterval);
         timerInterval = null;
+    }
+    
+    // Reset timer values based on current mode (ensure isolation)
+    if (selectedTestMode === 'time') {
+        testDuration = selectedTimeValue;
+        timeRemaining = selectedTimeValue;
+    } else if (selectedTestMode === 'words') {
+        testDuration = 999;
+        timeRemaining = 0; // Start at 0 for count-up timer
+    } else {
+        // Fallback for unexpected states
+        testDuration = 60;
+        timeRemaining = 60;
     }
     
     // Reset display
@@ -281,6 +314,82 @@ function restartTest() {
     
     // Regenerate and display new words
     initializeTypingSession();
+}
+
+/**
+ * Reset the typing test completely to initial state
+ * This function stops timers, clears all state, and resets the UI
+ * Does NOT start a new test automatically
+ */
+function resetTypingTest() {
+    console.log('Resetting typing test...');
+    
+    // Stop and clear any running timer or interval
+    if (timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+    }
+    
+    // Reset all state variables
+    currentWordIndex = 0;
+    currentCharIndex = 0;
+    displayedWords = [];
+    testStarted = false;
+    testEnded = false;
+    startTime = null;
+    correctWords = 0;
+    incorrectWords = 0;
+    completedWordCount = 0;
+    totalTypedCharacters = 0;
+    
+    // Reset timer values based on current mode
+    if (selectedTestMode === 'time') {
+        testDuration = selectedTimeValue;
+        timeRemaining = selectedTimeValue;
+    } else {
+        testDuration = 999;
+        timeRemaining = 0; // Start at 0 for count-up timer in Words Mode
+    }
+    
+    // Clear typed input field
+    const typingInput = document.getElementById('typingInput');
+    if (typingInput) {
+        typingInput.value = '';
+        typingInput.disabled = false; // Ensure input is enabled
+    }
+    
+    // Reset timer display to default (no countdown running)
+    updateTimerDisplay();
+    
+    // Clear WPM, accuracy, and error values
+    const wpmElement = document.getElementById('wpm');
+    const accuracyElement = document.getElementById('accuracy');
+    const errorsElement = document.getElementById('errors');
+    
+    if (wpmElement) wpmElement.textContent = '--';
+    if (accuracyElement) accuracyElement.textContent = '--%';
+    if (errorsElement) errorsElement.textContent = '--';
+    
+    // Remove active/correct/incorrect styles from words
+    if (wordsContainer) {
+        // Remove all character-level styling
+        const allChars = wordsContainer.querySelectorAll('.char');
+        allChars.forEach(char => {
+            char.classList.remove('correct', 'incorrect', 'active');
+        });
+        
+        // Remove all word-level styling
+        const allWords = wordsContainer.querySelectorAll('[data-index]');
+        allWords.forEach(word => {
+            word.classList.remove('active', 'completed', 'incorrect');
+        });
+        
+        // Clear any cursor positioning
+        const cursors = wordsContainer.querySelectorAll('.cursor');
+        cursors.forEach(cursor => cursor.remove());
+    }
+    
+    console.log('Typing test reset complete');
 }
 
 /**
@@ -600,15 +709,15 @@ function handleSpacePress() {
         // Only increment completed word count when space is pressed AND text was typed
         completedWordCount++;
         
-        // Check if Words Mode target is reached
-        if (selectedTestMode === 'words' && completedWordCount >= selectedWordsValue) {
-            console.log(`Words Mode completed: ${completedWordCount}/${selectedWordsValue} words`);
+        // Process the typed word first to update correctWords count
+        processCurrentWord(typedText);
+        
+        // Check if Words Mode target is reached (based on correct words)
+        if (selectedTestMode === 'words' && correctWords >= selectedWordsValue) {
+            console.log(`Words Mode completed: ${correctWords}/${selectedWordsValue} correct words`);
             endTest();
             return;
         }
-        
-        // Process the typed word
-        processCurrentWord(typedText);
     }
     
     // Move to next word
@@ -883,6 +992,11 @@ function setupModeUI() {
                 timeOptions.style.display = 'flex';
                 wordsOptions.style.display = 'none';
                 console.log(`Test mode changed to: ${selectedTestMode}`);
+                
+                // Reset test and regenerate words when mode changes
+                resetTypingTest();
+                const wordArray = generateRandomWords(45);
+                displayWords(wordArray);
             }
         });
         
@@ -892,6 +1006,11 @@ function setupModeUI() {
                 timeOptions.style.display = 'none';
                 wordsOptions.style.display = 'flex';
                 console.log(`Test mode changed to: ${selectedTestMode}`);
+                
+                // Reset test and regenerate words when mode changes
+                resetTypingTest();
+                const wordArray = generateRandomWords(Math.max(selectedWordsValue + 20, 45));
+                displayWords(wordArray);
             }
         });
         
@@ -903,6 +1022,11 @@ function setupModeUI() {
                 this.classList.add('active');
                 selectedTimeValue = parseInt(this.dataset.time);
                 console.log(`Time value selected: ${selectedTimeValue}s`);
+                
+                // Reset test and regenerate words when time duration changes
+                resetTypingTest();
+                const wordArray = generateRandomWords(45);
+                displayWords(wordArray);
             });
         });
         
@@ -913,6 +1037,11 @@ function setupModeUI() {
                 this.classList.add('active');
                 selectedWordsValue = parseInt(this.dataset.words);
                 console.log(`Words value selected: ${selectedWordsValue} words`);
+                
+                // Reset test and regenerate words when word count changes
+                resetTypingTest();
+                const wordArray = generateRandomWords(Math.max(selectedWordsValue + 20, 45));
+                displayWords(wordArray);
             });
         });
     }
