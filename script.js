@@ -18,6 +18,7 @@ let correctWords = 0;
 let incorrectWords = 0;
 let completedWordCount = 0; // Tracks only words completed with space key
 let totalTypedCharacters = 0;
+let totalPenaltyApplied = 0; // Track total penalty time applied (in seconds)
 
 // Test mode selection state
 let selectedTestMode = 'time';  // 'time' or 'words'
@@ -191,8 +192,10 @@ function startTimer() {
 function updateTimerDisplay() {
     const timerElement = document.getElementById('timer');
     if (timerElement) {
-        const minutes = Math.floor(timeRemaining / 60);
-        const seconds = timeRemaining % 60;
+        // Clamp timeRemaining to minimum of 0 to prevent negative display
+        const displayTime = Math.max(0, timeRemaining);
+        const minutes = Math.floor(displayTime / 60);
+        const seconds = Math.floor(displayTime % 60);
         timerElement.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
     }
 }
@@ -229,15 +232,15 @@ function calculateAndDisplayResults() {
     const totalWords = completedWordCount;
     const accuracy = totalWords > 0 ? Math.round((correctWords / totalWords) * 100) : 0;
     
-    // Calculate WPM based on actual time elapsed
+    // Calculate WPM based on actual time elapsed (ensure no negative values)
     let timeElapsed;
     if (testStarted && startTime) {
         if (selectedTestMode === 'time') {
-            // In Time Mode, cap at testDuration
-            timeElapsed = Math.min((new Date() - startTime) / 1000, testDuration) / 60;
+            // In Time Mode, cap at testDuration and ensure minimum 0
+            timeElapsed = Math.max(0.1, Math.min((new Date() - startTime) / 1000, testDuration) / 60);
         } else {
-            // In Words Mode, use actual elapsed time (no cap)
-            timeElapsed = (new Date() - startTime) / 1000 / 60;
+            // In Words Mode, use actual elapsed time (ensure minimum 0.1 minutes)
+            timeElapsed = Math.max(0.1, (new Date() - startTime) / 1000 / 60);
         }
     } else {
         timeElapsed = 1; // Fallback
@@ -254,7 +257,37 @@ function calculateAndDisplayResults() {
     if (accuracyElement) accuracyElement.textContent = `${accuracy}%`;
     if (errorsElement) errorsElement.textContent = incorrectWords;
     
+    // Display penalty summary for advanced difficulty levels
+    displayPenaltySummary();
+    
     console.log(`Results - WPM: ${wpm}, Accuracy: ${accuracy}%, Errors: ${incorrectWords}, Completed Words: ${completedWordCount}`);
+}
+
+/**
+ * Display penalty summary in results section
+ */
+function displayPenaltySummary() {
+    const penaltySummaryElement = document.getElementById('penaltySummary');
+    
+    if (!penaltySummaryElement) {
+        return;
+    }
+    
+    // Only show penalty summary for advanced difficulty levels and when penalties were applied
+    if ((currentDifficulty === 'hard' || currentDifficulty === 'developer') && totalPenaltyApplied > 0) {
+        const errorCount = incorrectWords;
+        const penaltyPerError = 0.5;
+        
+        penaltySummaryElement.innerHTML = `
+            <div class="penalty-info">
+                <strong>Penalty Applied:</strong> ${totalPenaltyApplied}s 
+                (${errorCount} errors × ${penaltyPerError}s)
+            </div>
+        `;
+        penaltySummaryElement.style.display = 'block';
+    } else {
+        penaltySummaryElement.style.display = 'none';
+    }
 }
 
 /**
@@ -271,6 +304,7 @@ function resetStatistics() {
     incorrectWords = 0;
     completedWordCount = 0; // Reset completed word count
     totalTypedCharacters = 0;
+    totalPenaltyApplied = 0; // Reset penalty tracking
     
     // Stop and clear any running timer
     if (timerInterval) {
@@ -301,6 +335,12 @@ function resetStatistics() {
     if (wpmElement) wpmElement.textContent = '--';
     if (accuracyElement) accuracyElement.textContent = '--%';
     if (errorsElement) errorsElement.textContent = '--';
+    
+    // Hide penalty summary
+    const penaltySummaryElement = document.getElementById('penaltySummary');
+    if (penaltySummaryElement) {
+        penaltySummaryElement.style.display = 'none';
+    }
 }
 
 /**
@@ -341,6 +381,7 @@ function resetTypingTest() {
     incorrectWords = 0;
     completedWordCount = 0;
     totalTypedCharacters = 0;
+    totalPenaltyApplied = 0; // Reset penalty tracking
     
     // Reset timer values based on current mode
     if (selectedTestMode === 'time') {
@@ -390,6 +431,33 @@ function resetTypingTest() {
     }
     
     console.log('Typing test reset complete');
+}
+
+/**
+ * Apply time penalty for errors in advanced difficulty levels
+ * Only applies to 'hard' and 'developer' difficulties
+ */
+function applyErrorTimePenalty() {
+    // Only apply penalty for advanced difficulty levels
+    if (currentDifficulty !== 'hard' && currentDifficulty !== 'developer') {
+        return;
+    }
+    
+    const penaltySeconds = 0.5;
+    totalPenaltyApplied += penaltySeconds; // Track total penalties
+    
+    if (selectedTestMode === 'time') {
+        // Time Mode: Reduce remaining test time
+        timeRemaining = Math.max(0, timeRemaining - penaltySeconds);
+        updateTimerDisplay();
+        console.log(`Time penalty applied: -${penaltySeconds}s (${currentDifficulty} difficulty)`);
+    } else if (selectedTestMode === 'words') {
+        // Words Mode: Add to elapsed time (implemented via timer adjustment)
+        if (testStarted && timerInterval) {
+            timeRemaining += penaltySeconds;
+            console.log(`Time penalty applied: +${penaltySeconds}s elapsed (${currentDifficulty} difficulty)`);
+        }
+    }
 }
 
 /**
@@ -746,6 +814,13 @@ function skipCurrentWord() {
     const currentWordSpan = wordsContainer.querySelector(`[data-index="${currentWordIndex}"]`);
     
     if (currentWordSpan) {
+        // Count skipped word as exactly ONE error
+        incorrectWords++;
+        console.log(`Word skipped - counted as 1 error. Total errors: ${incorrectWords}`);
+        
+        // Apply time penalty for advanced difficulty levels
+        applyErrorTimePenalty();
+        
         // Mark word as skipped (can be corrected later)
         currentWordSpan.classList.remove('active');
         currentWordSpan.classList.add('skipped');
@@ -775,6 +850,10 @@ function processCurrentWord(typedWord) {
         correctWords++;
     } else {
         incorrectWords++;
+        console.log(`Incorrect word typed. Total errors: ${incorrectWords}`);
+        
+        // Apply time penalty for advanced difficulty levels
+        applyErrorTimePenalty();
     }
     
     // Finalize the word visually
