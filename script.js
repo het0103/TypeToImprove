@@ -182,7 +182,7 @@ function startTimer() {
             timeRemaining++;
             updateTimerDisplay();
             
-            // Words Mode ending is handled elsewhere by word count
+            // Words Mode ending is handled ONLY by word completion check
         }
     }, 1000);
     
@@ -207,6 +207,10 @@ function updateTimerDisplay() {
  * End the typing test and calculate results
  */
 function endTest() {
+    // Safety guard - prevent multiple calls
+    if (testEnded) {
+        return;
+    }
     testEnded = true;
     
     // Stop the timer
@@ -673,6 +677,11 @@ function handleInput(event) {
  * Handle character-level penalties for typing mistakes
  */
 function handleCharacterPenalties(typedText, expectedWord) {
+    // Don't process penalties if test has ended
+    if (testEnded) {
+        return;
+    }
+    
     // Check each character position for mistakes
     for (let i = 0; i < typedText.length; i++) {
         const typedChar = typedText[i];
@@ -837,6 +846,11 @@ function handleKeyDown(event) {
  * Handle backspace key press with cross-word navigation
  */
 function handleBackspace() {
+    // Don't process if test has ended
+    if (testEnded) {
+        return;
+    }
+    
     const typedText = typingInput.value;
     
     if (typedText.length === 0 && currentWordIndex > 0) {
@@ -853,6 +867,11 @@ function handleBackspace() {
  * Move cursor to the previous word
  */
 function moveToPreviousWord() {
+    // Don't process if test has ended
+    if (testEnded) {
+        return;
+    }
+    
     if (currentWordIndex <= 0) {
         return; // Already at first word
     }
@@ -905,6 +924,11 @@ function moveToPreviousWord() {
  * Handle space key press (soft word separator)
  */
 function handleSpacePress() {
+    // Don't process if test has ended
+    if (testEnded) {
+        return;
+    }
+    
     const typedText = typingInput.value.trim();
     
     if (typedText === '') {
@@ -934,6 +958,11 @@ function handleSpacePress() {
  * Skip the current word (mark as skipped, not committed)
  */
 function skipCurrentWord() {
+    // Don't process if test has ended
+    if (testEnded) {
+        return;
+    }
+    
     const currentWordSpan = wordsContainer.querySelector(`[data-index="${currentWordIndex}"]`);
     
     if (currentWordSpan) {
@@ -961,6 +990,11 @@ function skipCurrentWord() {
  * Process the currently typed word
  */
 function processCurrentWord(typedWord) {
+    // Don't process if test has ended
+    if (testEnded) {
+        return;
+    }
+    
     // Track typed characters for statistics
     totalTypedCharacters += typedWord.length;
     
@@ -994,6 +1028,11 @@ function processCurrentWord(typedWord) {
  * Move to the next word
  */
 function moveToNextWord() {
+    // Don't process if test has ended
+    if (testEnded) {
+        return;
+    }
+    
     // Clear the input field
     typingInput.value = '';
     
@@ -1012,8 +1051,8 @@ function moveToNextWord() {
             setInitialCursor(nextWordSpan);
         }
     } else if (!testEnded && selectedTestMode === 'time') {
-        // All words completed in Time Mode
-        console.log('All words completed!');
+        // Time Mode ONLY: All words completed
+        console.log('All words completed in Time Mode!');
         endTest();
     }
 }
