@@ -494,3 +494,28 @@ h1 {
 .penalty-info strong {
     color: #78350f;
 }
+
+/* Real-time Penalty Indicator */
+.penalty-indicator {
+    margin-top: 0.5rem;
+    padding: 0.5rem;
+    background-color: #fee2e2;
+    border: 1px solid #dc2626;
+    border-radius: 4px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #dc2626;
+    text-align: center;
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-5px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

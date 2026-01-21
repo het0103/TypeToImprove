@@ -20,6 +20,9 @@ let completedWordCount = 0; // Tracks only words completed with space key
 let totalTypedCharacters = 0;
 let totalPenaltyApplied = 0; // Track total penalty time applied (in seconds)
 
+// Penalty tracking variables
+let penalizedPositions = new Set(); // Track positions that have been penalized to prevent duplicates
+
 // Test mode selection state
 let selectedTestMode = 'time';  // 'time' or 'words'
 let selectedTimeValue = 30;     // seconds (15, 30, 60)
@@ -239,8 +242,10 @@ function calculateAndDisplayResults() {
             // In Time Mode, cap at testDuration and ensure minimum 0
             timeElapsed = Math.max(0.1, Math.min((new Date() - startTime) / 1000, testDuration) / 60);
         } else {
-            // In Words Mode, use actual elapsed time (ensure minimum 0.1 minutes)
-            timeElapsed = Math.max(0.1, (new Date() - startTime) / 1000 / 60);
+            // In Words Mode, use actual elapsed time + penalty time (ensure minimum 0.1 minutes)
+            const baseElapsedSeconds = (new Date() - startTime) / 1000;
+            const totalElapsedSeconds = baseElapsedSeconds + totalPenaltyApplied;
+            timeElapsed = Math.max(0.1, totalElapsedSeconds / 60);
         }
     } else {
         timeElapsed = 1; // Fallback
@@ -305,6 +310,12 @@ function resetStatistics() {
     completedWordCount = 0; // Reset completed word count
     totalTypedCharacters = 0;
     totalPenaltyApplied = 0; // Reset penalty tracking
+    
+    // Reset penalty position tracking
+    penalizedPositions = new Set();
+    
+    // Reset penalty indicator
+    resetPenaltyIndicator();
     
     // Stop and clear any running timer
     if (timerInterval) {
@@ -383,6 +394,9 @@ function resetTypingTest() {
     totalTypedCharacters = 0;
     totalPenaltyApplied = 0; // Reset penalty tracking
     
+    // Reset penalty indicator
+    resetPenaltyIndicator();
+    
     // Reset timer values based on current mode
     if (selectedTestMode === 'time') {
         testDuration = selectedTimeValue;
@@ -452,11 +466,77 @@ function applyErrorTimePenalty() {
         updateTimerDisplay();
         console.log(`Time penalty applied: -${penaltySeconds}s (${currentDifficulty} difficulty)`);
     } else if (selectedTestMode === 'words') {
-        // Words Mode: Add to elapsed time (implemented via timer adjustment)
-        if (testStarted && timerInterval) {
-            timeRemaining += penaltySeconds;
-            console.log(`Time penalty applied: +${penaltySeconds}s elapsed (${currentDifficulty} difficulty)`);
+        // Words Mode: Only track penalty, do NOT modify running timer
+        console.log(`Time penalty tracked: +${penaltySeconds}s (${currentDifficulty} difficulty)`);
+        
+        // Update visual penalty indicator
+        updatePenaltyIndicator();
+    }
+}
+
+/**
+ * Apply penalty for individual character mistakes
+ */
+function applyCharacterPenalty() {
+    // Only apply penalty for advanced difficulty levels
+    if (currentDifficulty !== 'hard' && currentDifficulty !== 'developer') {
+        return;
+    }
+    
+    // Only apply penalties after test has started
+    if (!testStarted) {
+        return;
+    }
+    
+    const penaltySeconds = 0.5;
+    totalPenaltyApplied += penaltySeconds; // Track total penalties
+    
+    if (selectedTestMode === 'time') {
+        // Time Mode: Reduce remaining test time
+        timeRemaining = Math.max(0, timeRemaining - penaltySeconds);
+        updateTimerDisplay();
+        console.log(`Character penalty applied: -${penaltySeconds}s (${currentDifficulty} difficulty)`);
+    } else if (selectedTestMode === 'words') {
+        // Words Mode: Only track penalty, do NOT modify running timer
+        console.log(`Character penalty tracked: +${penaltySeconds}s (${currentDifficulty} difficulty)`);
+        
+        // Update visual penalty indicator
+        updatePenaltyIndicator();
+    }
+}
+
+/**
+ * Update the visual penalty indicator for Words Mode
+ */
+function updatePenaltyIndicator() {
+    const penaltyIndicator = document.getElementById('penaltyIndicator');
+    
+    if (!penaltyIndicator) {
+        return;
+    }
+    
+    // Only show penalty indicator in Words Mode for advanced difficulty levels
+    if (selectedTestMode === 'words' && (currentDifficulty === 'hard' || currentDifficulty === 'developer')) {
+        if (totalPenaltyApplied > 0) {
+            penaltyIndicator.textContent = `Penalty: ${totalPenaltyApplied.toFixed(1)}s`;
+            penaltyIndicator.style.display = 'block';
+        } else {
+            penaltyIndicator.style.display = 'none';
         }
+    } else {
+        penaltyIndicator.style.display = 'none';
+    }
+}
+
+/**
+ * Reset the penalty indicator
+ */
+function resetPenaltyIndicator() {
+    const penaltyIndicator = document.getElementById('penaltyIndicator');
+    
+    if (penaltyIndicator) {
+        penaltyIndicator.style.display = 'none';
+        penaltyIndicator.textContent = 'Penalty: 0.0s';
     }
 }
 
@@ -560,20 +640,55 @@ function handleInput(event) {
         return;
     }
     
+    const typedText = typingInput.value;
+    
+    // Block double spaces completely - prevent consecutive spaces
+    if (typedText.includes('  ')) {
+        typingInput.value = typedText.replace(/  +/g, ' ');
+        console.log('Double space blocked and removed');
+        return;
+    }
+    
     // Start timer on first input
-    if (!testStarted) {
+    if (!testStarted && typedText.length > 0) {
         startTimer();
     }
     
-    const typedText = typingInput.value;
     const currentWord = displayedWords[currentWordIndex];
     
     if (!currentWord) {
         return;
     }
     
+    // Handle character-level penalties for each typed character
+    if (testStarted && typedText.length > 0) {
+        handleCharacterPenalties(typedText, currentWord);
+    }
+    
     // Update character-level highlighting
     updateCharacterHighlighting(typedText, currentWord);
+}
+
+/**
+ * Handle character-level penalties for typing mistakes
+ */
+function handleCharacterPenalties(typedText, expectedWord) {
+    // Check each character position for mistakes
+    for (let i = 0; i < typedText.length; i++) {
+        const typedChar = typedText[i];
+        const expectedChar = expectedWord[i] || null;
+        const positionKey = `${currentWordIndex}-${i}`;
+        
+        // Apply penalty if character is incorrect and position hasn't been penalized yet
+        if (typedChar !== expectedChar) {
+            // For new mistakes at this position, apply penalty
+            if (!penalizedPositions.has(positionKey)) {
+                applyCharacterPenalty();
+                penalizedPositions.add(positionKey);
+                console.log(`Character penalty applied at word ${currentWordIndex}, position ${i}: '${typedChar}' ≠ '${expectedChar}'`);
+            }
+        }
+    }
 }
 
 /**
@@ -706,6 +821,14 @@ function handleKeyDown(event) {
     // Check if spacebar was pressed
     if (event.code === 'Space') {
         event.preventDefault(); // Prevent default space behavior
+        
+        // Block space if previous character is already a space
+        const currentText = typingInput.value;
+        if (currentText.length > 0 && currentText[currentText.length - 1] === ' ') {
+            console.log('Double space blocked');
+            return;
+        }
+        
         handleSpacePress();
     }
 }
