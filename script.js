@@ -24,6 +24,10 @@ let totalPenaltyApplied = 0; // Track total penalty time applied (in seconds)
 let penalizedPositions = new Set(); // Track positions that have been penalized to prevent duplicates
 let errorPositions = new Set(); // Track positions that have been counted as errors to prevent duplicates
 
+// Position + attempt-based penalty tracking
+let lastPenalizedIndex = -1;
+let lastPenalizedChar = '';
+
 // Test mode selection state
 let selectedTestMode = 'time';  // 'time' or 'words'
 let selectedTimeValue = 30;     // seconds (15, 30, 60)
@@ -316,6 +320,10 @@ function resetStatistics() {
     penalizedPositions = new Set();
     errorPositions = new Set(); // Reset error position tracking
     
+    // Reset position + attempt-based penalty tracking
+    lastPenalizedIndex = -1;
+    lastPenalizedChar = '';
+    
     // Reset penalty indicator
     resetPenaltyIndicator();
     
@@ -399,6 +407,10 @@ function resetTypingTest() {
     // Reset penalty and error position tracking
     penalizedPositions = new Set();
     errorPositions = new Set();
+    
+    // Reset position + attempt-based penalty tracking
+    lastPenalizedIndex = -1;
+    lastPenalizedChar = '';
     
     // Reset penalty indicator
     resetPenaltyIndicator();
@@ -706,10 +718,11 @@ function handleCharacterPenalties(typedText, expectedWord) {
                 console.log(`Character error counted at word ${currentWordIndex}, position ${i}: '${typedChar}' ≠ '${expectedChar}'`);
             }
             
-            // Apply penalty if position hasn't been penalized yet
-            if (!penalizedPositions.has(positionKey)) {
+            // Apply penalty using position + attempt-based tracking
+            if (i !== lastPenalizedIndex || typedChar !== lastPenalizedChar) {
                 applyCharacterPenalty();
-                penalizedPositions.add(positionKey);
+                lastPenalizedIndex = i;
+                lastPenalizedChar = typedChar;
                 console.log(`Character penalty applied at word ${currentWordIndex}, position ${i}: '${typedChar}' ≠ '${expectedChar}'`);
             }
         }
@@ -875,6 +888,11 @@ function handleBackspace() {
     } else if (typedText.length > 0) {
         // Remove last character normally
         typingInput.value = typedText.slice(0, -1);
+        
+        // Reset position + attempt-based penalty tracking on backspace
+        lastPenalizedIndex = -1;
+        lastPenalizedChar = '';
+        
         updateCharacterHighlighting(typingInput.value, displayedWords[currentWordIndex]);
     }
 }
@@ -903,6 +921,10 @@ function moveToPreviousWord() {
     
     // Move to previous word
     currentWordIndex--;
+    
+    // Reset position + attempt-based penalty tracking on cursor move
+    lastPenalizedIndex = -1;
+    lastPenalizedChar = '';
     
     // Get the previous word and set input to its content
     const prevWord = displayedWords[currentWordIndex];
@@ -1057,6 +1079,10 @@ function moveToNextWord() {
     
     // CRITICAL: Only increment currentWordIndex here - no other logic should modify it
     currentWordIndex++;
+    
+    // Reset position + attempt-based penalty tracking on word advance
+    lastPenalizedIndex = -1;
+    lastPenalizedChar = '';
     
     // Check if there are more words and test hasn't ended
     if (currentWordIndex < displayedWords.length && !testEnded) {
