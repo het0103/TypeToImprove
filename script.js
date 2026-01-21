@@ -22,6 +22,7 @@ let totalPenaltyApplied = 0; // Track total penalty time applied (in seconds)
 
 // Penalty tracking variables
 let penalizedPositions = new Set(); // Track positions that have been penalized to prevent duplicates
+let errorPositions = new Set(); // Track positions that have been counted as errors to prevent duplicates
 
 // Test mode selection state
 let selectedTestMode = 'time';  // 'time' or 'words'
@@ -171,6 +172,8 @@ function startTimer() {
         if (selectedTestMode === 'time') {
             // Time Mode: Count down
             timeRemaining--;
+            // CRITICAL: Hard clamp timer at 0 - never allow negative values
+            timeRemaining = Math.max(0, timeRemaining);
             updateTimerDisplay();
             
             // End test when countdown reaches 0
@@ -195,7 +198,7 @@ function startTimer() {
 function updateTimerDisplay() {
     const timerElement = document.getElementById('timer');
     if (timerElement) {
-        // Clamp timeRemaining to minimum of 0 to prevent negative display
+        // CRITICAL: Hard clamp displayTime to minimum of 0 to prevent negative display
         const displayTime = Math.max(0, timeRemaining);
         const minutes = Math.floor(displayTime / 60);
         const seconds = Math.floor(displayTime % 60);
@@ -207,11 +210,16 @@ function updateTimerDisplay() {
  * End the typing test and calculate results
  */
 function endTest() {
-    // Safety guard - prevent multiple calls
+    // CRITICAL: Safety guard - prevent multiple calls (idempotent)
     if (testEnded) {
         return;
     }
     testEnded = true;
+    
+    // CRITICAL: Hard clamp timer state at 0 before ending
+    if (selectedTestMode === 'time') {
+        timeRemaining = Math.max(0, timeRemaining);
+    }
     
     // Stop the timer
     if (timerInterval) {
@@ -264,37 +272,26 @@ function calculateAndDisplayResults() {
     
     if (wpmElement) wpmElement.textContent = wpm;
     if (accuracyElement) accuracyElement.textContent = `${accuracy}%`;
-    if (errorsElement) errorsElement.textContent = incorrectWords;
-    
-    // Display penalty summary for advanced difficulty levels
-    displayPenaltySummary();
+    if (errorsElement) {
+        // Show penalty inline with errors if applicable
+        if ((currentDifficulty === 'hard' || currentDifficulty === 'developer') && totalPenaltyApplied > 0) {
+            errorsElement.textContent = `${incorrectWords} (+${totalPenaltyApplied}s penalty)`;
+        } else {
+            errorsElement.textContent = incorrectWords;
+        }
+    }
     
     console.log(`Results - WPM: ${wpm}, Accuracy: ${accuracy}%, Errors: ${incorrectWords}, Completed Words: ${completedWordCount}`);
 }
 
 /**
- * Display penalty summary in results section
+ * Display penalty summary in results section - DISABLED (penalty shown inline)
  */
 function displayPenaltySummary() {
     const penaltySummaryElement = document.getElementById('penaltySummary');
     
-    if (!penaltySummaryElement) {
-        return;
-    }
-    
-    // Only show penalty summary for advanced difficulty levels and when penalties were applied
-    if ((currentDifficulty === 'hard' || currentDifficulty === 'developer') && totalPenaltyApplied > 0) {
-        const errorCount = incorrectWords;
-        const penaltyPerError = 0.5;
-        
-        penaltySummaryElement.innerHTML = `
-            <div class="penalty-info">
-                <strong>Penalty Applied:</strong> ${totalPenaltyApplied}s 
-                (${errorCount} errors × ${penaltyPerError}s)
-            </div>
-        `;
-        penaltySummaryElement.style.display = 'block';
-    } else {
+    if (penaltySummaryElement) {
+        // Always hide the penalty summary box
         penaltySummaryElement.style.display = 'none';
     }
 }
@@ -317,6 +314,7 @@ function resetStatistics() {
     
     // Reset penalty position tracking
     penalizedPositions = new Set();
+    errorPositions = new Set(); // Reset error position tracking
     
     // Reset penalty indicator
     resetPenaltyIndicator();
@@ -349,7 +347,7 @@ function resetStatistics() {
     
     if (wpmElement) wpmElement.textContent = '--';
     if (accuracyElement) accuracyElement.textContent = '--%';
-    if (errorsElement) errorsElement.textContent = '--';
+    if (errorsElement) errorsElement.textContent = '--'; // Reset errors display (no penalty info)
     
     // Hide penalty summary
     const penaltySummaryElement = document.getElementById('penaltySummary');
@@ -397,6 +395,10 @@ function resetTypingTest() {
     completedWordCount = 0;
     totalTypedCharacters = 0;
     totalPenaltyApplied = 0; // Reset penalty tracking
+    
+    // Reset penalty and error position tracking
+    penalizedPositions = new Set();
+    errorPositions = new Set();
     
     // Reset penalty indicator
     resetPenaltyIndicator();
@@ -461,11 +463,17 @@ function applyErrorTimePenalty() {
         return;
     }
     
+    // CRITICAL: Only apply penalties after test has started AND before test ends
+    if (!testStarted || testEnded) {
+        return;
+    }
+    
     const penaltySeconds = 0.5;
     totalPenaltyApplied += penaltySeconds; // Track total penalties
     
     if (selectedTestMode === 'time') {
         // Time Mode: Reduce remaining test time
+        // CRITICAL: Hard clamp timer at 0 to prevent negative values
         timeRemaining = Math.max(0, timeRemaining - penaltySeconds);
         updateTimerDisplay();
         console.log(`Time penalty applied: -${penaltySeconds}s (${currentDifficulty} difficulty)`);
@@ -487,8 +495,8 @@ function applyCharacterPenalty() {
         return;
     }
     
-    // Only apply penalties after test has started
-    if (!testStarted) {
+    // CRITICAL: Only apply penalties after test has started AND before test ends
+    if (!testStarted || testEnded) {
         return;
     }
     
@@ -497,6 +505,7 @@ function applyCharacterPenalty() {
     
     if (selectedTestMode === 'time') {
         // Time Mode: Reduce remaining test time
+        // CRITICAL: Hard clamp timer at 0 to prevent negative values
         timeRemaining = Math.max(0, timeRemaining - penaltySeconds);
         updateTimerDisplay();
         console.log(`Character penalty applied: -${penaltySeconds}s (${currentDifficulty} difficulty)`);
@@ -639,7 +648,7 @@ function preventContextMenu(event) {
  * @param {InputEvent} event - The input event
  */
 function handleInput(event) {
-    // Don't process if test has ended
+    // CRITICAL: Don't process if test has ended - INPUT FREEZE
     if (testEnded) {
         return;
     }
@@ -677,7 +686,7 @@ function handleInput(event) {
  * Handle character-level penalties for typing mistakes
  */
 function handleCharacterPenalties(typedText, expectedWord) {
-    // Don't process penalties if test has ended
+    // CRITICAL: Don't process penalties if test has ended - INPUT FREEZE
     if (testEnded) {
         return;
     }
@@ -688,9 +697,16 @@ function handleCharacterPenalties(typedText, expectedWord) {
         const expectedChar = expectedWord[i] || null;
         const positionKey = `${currentWordIndex}-${i}`;
         
-        // Apply penalty if character is incorrect and position hasn't been penalized yet
+        // Apply penalty and count error if character is incorrect
         if (typedChar !== expectedChar) {
-            // For new mistakes at this position, apply penalty
+            // Count as error if position hasn't been counted yet
+            if (!errorPositions.has(positionKey)) {
+                incorrectWords++; // Live character-level error counting
+                errorPositions.add(positionKey);
+                console.log(`Character error counted at word ${currentWordIndex}, position ${i}: '${typedChar}' ≠ '${expectedChar}'`);
+            }
+            
+            // Apply penalty if position hasn't been penalized yet
             if (!penalizedPositions.has(positionKey)) {
                 applyCharacterPenalty();
                 penalizedPositions.add(positionKey);
@@ -792,7 +808,7 @@ function updateWordState(wordSpan, typedText, expectedWord) {
  * @param {KeyboardEvent} event - The keydown event
  */
 function handleKeyDown(event) {
-    // Don't process if test has ended
+    // CRITICAL: Don't process if test has ended - INPUT FREEZE
     if (testEnded) {
         return;
     }
@@ -846,7 +862,7 @@ function handleKeyDown(event) {
  * Handle backspace key press with cross-word navigation
  */
 function handleBackspace() {
-    // Don't process if test has ended
+    // CRITICAL: Don't process if test has ended - INPUT FREEZE
     if (testEnded) {
         return;
     }
@@ -867,7 +883,7 @@ function handleBackspace() {
  * Move cursor to the previous word
  */
 function moveToPreviousWord() {
-    // Don't process if test has ended
+    // CRITICAL: Don't process if test has ended - INPUT FREEZE
     if (testEnded) {
         return;
     }
@@ -876,6 +892,7 @@ function moveToPreviousWord() {
         return; // Already at first word
     }
     
+    // CRITICAL: Only decrement currentWordIndex here - no other logic should modify it
     // Mark current word as inactive and clear all states
     const currentWordSpan = wordsContainer.querySelector(`[data-index="${currentWordIndex}"]`);
     if (currentWordSpan) {
@@ -924,7 +941,7 @@ function moveToPreviousWord() {
  * Handle space key press (soft word separator)
  */
 function handleSpacePress() {
-    // Don't process if test has ended
+    // CRITICAL: Don't process if test has ended - INPUT FREEZE
     if (testEnded) {
         return;
     }
@@ -936,14 +953,14 @@ function handleSpacePress() {
         skipCurrentWord();
         console.log(`Word skipped (not counted). Completed words: ${completedWordCount}`);
     } else {
-        // Only increment completed word count when space is pressed AND text was typed
+        // CRITICAL: Only increment completed word count when space is pressed AND text was typed
         completedWordCount++;
         
         // Process the typed word first to update correctWords count
         processCurrentWord(typedText);
         
-        // Check if Words Mode target is reached (based on correct words)
-        if (selectedTestMode === 'words' && correctWords >= selectedWordsValue) {
+        // CRITICAL: Words Mode end condition - must be EXACT match, not >=
+        if (selectedTestMode === 'words' && correctWords === selectedWordsValue) {
             console.log(`Words Mode completed: ${correctWords}/${selectedWordsValue} correct words`);
             endTest();
             return;
@@ -958,7 +975,7 @@ function handleSpacePress() {
  * Skip the current word (mark as skipped, not committed)
  */
 function skipCurrentWord() {
-    // Don't process if test has ended
+    // CRITICAL: Don't process if test has ended - INPUT FREEZE
     if (testEnded) {
         return;
     }
@@ -966,9 +983,8 @@ function skipCurrentWord() {
     const currentWordSpan = wordsContainer.querySelector(`[data-index="${currentWordIndex}"]`);
     
     if (currentWordSpan) {
-        // Count skipped word as exactly ONE error
-        incorrectWords++;
-        console.log(`Word skipped - counted as 1 error. Total errors: ${incorrectWords}`);
+        // Don't count skipped word as error - character-level errors already counted
+        console.log(`Word skipped - character-level errors already counted.`);
         
         // Apply time penalty for advanced difficulty levels
         applyErrorTimePenalty();
@@ -990,7 +1006,7 @@ function skipCurrentWord() {
  * Process the currently typed word
  */
 function processCurrentWord(typedWord) {
-    // Don't process if test has ended
+    // CRITICAL: Don't process if test has ended - INPUT FREEZE
     if (testEnded) {
         return;
     }
@@ -1006,8 +1022,8 @@ function processCurrentWord(typedWord) {
     if (isCorrect) {
         correctWords++;
     } else {
-        incorrectWords++;
-        console.log(`Incorrect word typed. Total errors: ${incorrectWords}`);
+        // Don't increment incorrectWords here - already counted at character level
+        console.log(`Incorrect word typed. Character-level errors already counted.`);
         
         // Apply time penalty for advanced difficulty levels
         applyErrorTimePenalty();
@@ -1028,7 +1044,7 @@ function processCurrentWord(typedWord) {
  * Move to the next word
  */
 function moveToNextWord() {
-    // Don't process if test has ended
+    // CRITICAL: Don't process if test has ended - INPUT FREEZE
     if (testEnded) {
         return;
     }
@@ -1039,7 +1055,7 @@ function moveToNextWord() {
     // Reset character tracking
     currentCharIndex = 0;
     
-    // Move to next word
+    // CRITICAL: Only increment currentWordIndex here - no other logic should modify it
     currentWordIndex++;
     
     // Check if there are more words and test hasn't ended
