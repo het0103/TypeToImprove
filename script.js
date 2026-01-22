@@ -1,6 +1,72 @@
 // TypeToImprove - Random Word Generation and Display
 // This module handles generating and displaying random word sets for typing practice
 
+// ========================
+// THEME MANAGEMENT SYSTEM
+// ========================
+
+/**
+ * Theme management functionality
+ * Handles light/dark theme toggling with localStorage persistence
+ */
+const ThemeManager = {
+    STORAGE_KEY: 'typeToImprove_theme',
+    DARK_CLASS: 'dark-theme',
+    
+    /**
+     * Initialize theme system on page load
+     */
+    init() {
+        // Load saved theme or default to light
+        const savedTheme = localStorage.getItem(this.STORAGE_KEY) || 'light';
+        this.setTheme(savedTheme);
+        
+        // Add event listener for theme toggle button
+        const toggleButton = document.getElementById('themeToggle');
+        if (toggleButton) {
+            toggleButton.addEventListener('click', () => this.toggleTheme());
+        }
+    },
+    
+    /**
+     * Set the theme (light or dark)
+     * @param {string} theme - 'light' or 'dark'
+     */
+    setTheme(theme) {
+        const body = document.body;
+        
+        if (theme === 'dark') {
+            body.classList.add(this.DARK_CLASS);
+        } else {
+            body.classList.remove(this.DARK_CLASS);
+        }
+        
+        // Save to localStorage
+        localStorage.setItem(this.STORAGE_KEY, theme);
+    },
+    
+    /**
+     * Toggle between light and dark themes
+     */
+    toggleTheme() {
+        const body = document.body;
+        const isDark = body.classList.contains(this.DARK_CLASS);
+        this.setTheme(isDark ? 'light' : 'dark');
+    },
+    
+    /**
+     * Get current theme
+     * @returns {string} - 'light' or 'dark'
+     */
+    getCurrentTheme() {
+        return document.body.classList.contains(this.DARK_CLASS) ? 'dark' : 'light';
+    }
+};
+
+// ========================
+// TYPING GAME LOGIC
+// ========================
+
 // Global state variables for typing session
 let currentWordIndex = 0;
 let displayedWords = [];
@@ -1399,6 +1465,10 @@ function setupModeUI() {
 // Initialize when DOM is fully loaded
 document.addEventListener('DOMContentLoaded', function() {
     console.log('TypeToImprove loaded - DOM ready');
+    
+    // Initialize theme system first
+    ThemeManager.init();
+    
     setupModeUI();
     initializeTypingSession();
 });
