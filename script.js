@@ -1038,13 +1038,42 @@ function processCurrentWord(typedWord) {
     
     // Get the expected word
     const expectedWord = displayedWords[currentWordIndex];
-    const isCorrect = typedWord === expectedWord;
+    
+    // For programming level (developer difficulty), ensure robust token comparison
+    let isCorrect;
+    if (currentDifficulty === 'developer') {
+        // Programming level: normalize whitespace and ensure exact token match
+        const normalizedTyped = typedWord.trim();
+        const normalizedExpected = expectedWord.trim();
+        isCorrect = normalizedTyped === normalizedExpected;
+        
+        // Additional check: ensure both strings have same character codes to handle encoding issues
+        if (!isCorrect && normalizedTyped.length === normalizedExpected.length) {
+            let charMatch = true;
+            for (let i = 0; i < normalizedTyped.length; i++) {
+                if (normalizedTyped.charCodeAt(i) !== normalizedExpected.charCodeAt(i)) {
+                    charMatch = false;
+                    break;
+                }
+            }
+            isCorrect = charMatch;
+        }
+    } else {
+        // Standard comparison for other difficulties
+        isCorrect = typedWord === expectedWord;
+    }
     
     // Update statistics - word was already counted in handleSpacePress
     if (isCorrect) {
         correctWords++;
+        if (currentDifficulty === 'developer') {
+            console.log(`Programming token "${expectedWord}" completed correctly. Total correct: ${correctWords}/${selectedWordsValue}`);
+        }
     } else {
         // Don't increment incorrectWords here - already counted at character level
+        if (currentDifficulty === 'developer') {
+            console.log(`Programming token mismatch: typed="${typedWord}" expected="${expectedWord}"`);
+        }
         console.log(`Incorrect word typed. Character-level errors already counted.`);
         
         // Apply time penalty for advanced difficulty levels
