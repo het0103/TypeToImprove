@@ -12,8 +12,9 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="container">
-        <!-- Theme Toggle Button -->
+    <!-- Top Bar -->
+    <header class="top-bar">
+        <div class="app-name">TypeToImprove</div>
         <button class="theme-toggle" id="themeToggle" title="Toggle theme">
             <!-- Sun icon (light mode) -->
             <svg class="sun-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
@@ -24,97 +25,93 @@
                 <path d="M9.528 1.718a.75.75 0 01.162.819A8.97 8.97 0 009 6a9 9 0 009 9 8.97 8.97 0 003.463-.69.75.75 0 01.981.98 10.503 10.503 0 01-9.694 6.46c-5.799 0-10.5-4.701-10.5-10.5 0-4.368 2.667-8.112 6.46-9.694a.75.75 0 01.818.162z"/>
             </svg>
         </button>
+    </header>
+
+    <!-- Controls Row -->
+    <div class="controls-row">
+        <select id="difficultySelector" class="control-item">
+            <option value="easy">Easy</option>
+            <option value="medium" selected>Medium</option>
+            <option value="hard">Hard</option>
+            <option value="developer">Developer</option>
+        </select>
         
-        <header>
-            <h1>TypeToImprove</h1>
-        </header>
-        
-        <div class="difficulty-section">
-            <label for="difficultySelector" class="difficulty-label">Difficulty Level:</label>
-            <select id="difficultySelector" class="difficulty-selector">
-                <option value="easy">Easy - Simple words (2-4 letters)</option>
-                <option value="medium" selected>Medium - Common words (4-6 letters)</option>
-                <option value="hard">Hard - Complex words (6+ letters)</option>
-                <option value="developer">Developer - Programming terms</option>
-            </select>
+        <div class="mode-toggle control-item">
+            <input type="radio" id="timeMode" name="testMode" value="time" checked>
+            <label for="timeMode">Time</label>
+            <input type="radio" id="wordsMode" name="testMode" value="words">
+            <label for="wordsMode">Words</label>
         </div>
         
-        <!-- Test Mode Selector -->
-        <div class="mode-section">
-            <div class="mode-controls">
-                <div class="mode-toggle">
-                    <input type="radio" id="timeMode" name="testMode" value="time" checked>
-                    <label for="timeMode">Time Mode</label>
-                    <input type="radio" id="wordsMode" name="testMode" value="words">
-                    <label for="wordsMode">Words Mode</label>
-                </div>
-                
-                <div class="time-options" id="timeOptions">
-                    <button class="mode-option" data-time="15">15s</button>
-                    <button class="mode-option active" data-time="30">30s</button>
-                    <button class="mode-option" data-time="60">60s</button>
-                </div>
-                
-                <div class="words-options" id="wordsOptions" style="display: none;">
-                    <button class="mode-option" data-words="25">25</button>
-                    <button class="mode-option active" data-words="50">50</button>
-                    <button class="mode-option" data-words="100">100</button>
-                </div>
-            </div>
+        <div class="time-options control-item" id="timeOptions">
+            <button class="mode-option" data-time="15">15s</button>
+            <button class="mode-option active" data-time="30">30s</button>
+            <button class="mode-option" data-time="60">60s</button>
         </div>
         
-        <main>
-            <div class="typing-area">
-                <div class="words-container" id="wordsContainer">
-                    <!-- Words will be displayed here -->
-                </div>
-                
-                <input 
-                    type="text" 
-                    id="typingInput" 
-                    class="typing-input" 
-                    placeholder="Start typing here..." 
-                    disabled
-                    autocomplete="off"
-                    autocorrect="off"
-                    autocapitalize="none"
-                    spellcheck="false"
-                >
-            </div>
-            
-            <div class="stats-section">
-                <div class="timer-section">
-                    <h3>Timer</h3>
-                    <div id="timer" class="timer-display">--:--</div>
-                    <div id="penaltyIndicator" class="penalty-indicator" style="display: none;">
-                        Penalty: 0.0s
-                    </div>
-                </div>
-                
-                <div class="results-section">
-                    <h3>Results</h3>
-                    <div class="stats-grid">
-                        <div class="stat-item">
-                            <span class="stat-label">WPM:</span>
-                            <span id="wpm" class="stat-value">--</span>
-                        </div>
-                        <div class="stat-item">
-                            <span class="stat-label">Accuracy:</span>
-                            <span id="accuracy" class="stat-value">--%</span>
-                        </div>
-                        <div class="stat-item">
-                            <span class="stat-label">Errors:</span>
-                            <span id="errors" class="stat-value">--</span>
-                        </div>
-                    </div>
-                    <div id="penaltySummary" class="penalty-summary" style="display: none;">
-                        <!-- Penalty summary will be displayed here -->
-                    </div>
-                </div>
-            </div>
-        </main>
+        <div class="words-options control-item" id="wordsOptions" style="display: none;">
+            <button class="mode-option" data-words="25">25</button>
+            <button class="mode-option active" data-words="50">50</button>
+            <button class="mode-option" data-words="100">100</button>
+        </div>
     </div>
+
+    <!-- Main Typing Area -->
+    <main class="main-content">
+        <div class="words-container" id="wordsContainer">
+            <!-- Words will be displayed here -->
+        </div>
+        
+        <input 
+            type="text" 
+            id="typingInput" 
+            class="typing-input" 
+            placeholder="Start typing here..." 
+            disabled
+            autocomplete="off"
+            autocorrect="off"
+            autocapitalize="none"
+            spellcheck="false"
+        >
+    </main>
     
+    <!-- Stats Row -->
+    <div class="stats-row">
+        <div class="stat-group">
+            <div id="timer" class="stat-value">--:--</div>
+            <div class="stat-label">Time</div>
+        </div>
+        
+        <div class="stat-group">
+            <div id="wpm" class="stat-value">--</div>
+            <div class="stat-label">WPM</div>
+        </div>
+        
+        <div class="stat-group">
+            <div id="accuracy" class="stat-value">--%</div>
+            <div class="stat-label">Accuracy</div>
+        </div>
+        
+        <div class="stat-group">
+            <div id="errors" class="stat-value">--</div>
+            <div class="stat-label">Errors</div>
+        </div>
+        
+        <button id="restartBtn" class="restart-btn" title="Restart test (Tab key)">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                <path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/>
+            </svg>
+        </button>
+        
+        <div id="penaltyIndicator" class="penalty-indicator" style="display: none;">
+            Penalty: 0.0s
+        </div>
+        
+        <div id="penaltySummary" class="penalty-summary" style="display: none;">
+            <!-- Penalty summary will be displayed here -->
+        </div>
+    </div>
+
     <script src="words.js"></script>
     <script src="script.js"></script>
 </body>

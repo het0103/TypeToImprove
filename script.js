@@ -1249,6 +1249,93 @@ function setInitialCursor(wordSpan) {
 }
 
 /**
+ * Set up global keyboard event handlers
+ */
+function setupGlobalKeyHandlers() {
+    // Remove any existing global key handlers
+    document.removeEventListener('keydown', handleGlobalKeyDown);
+    
+    // Add global key handler
+    document.addEventListener('keydown', handleGlobalKeyDown);
+    
+    console.log('Global keyboard handlers set up');
+}
+
+/**
+ * Handle global keyboard shortcuts
+ * @param {KeyboardEvent} event - The keyboard event
+ */
+function handleGlobalKeyDown(event) {
+    // Handle Tab key for restart (only when not focused on input elements)
+    if (event.code === 'Tab' && !event.shiftKey && !event.ctrlKey && !event.metaKey) {
+        // Don't trigger if user is focused on input elements or controls
+        const activeElement = document.activeElement;
+        const isInputFocused = activeElement && (
+            activeElement.tagName === 'INPUT' || 
+            activeElement.tagName === 'SELECT' || 
+            activeElement.tagName === 'TEXTAREA' ||
+            activeElement.tagName === 'BUTTON' ||
+            activeElement.id === 'typingInput' // Specifically check for typing input
+        );
+        
+        if (!isInputFocused) {
+            event.preventDefault();
+            restartTest();
+            return false;
+        }
+    }
+    
+    // Handle Escape key for additional restart option (works from anywhere)
+    if (event.code === 'Escape') {
+        event.preventDefault();
+        restartTest();
+        // Refocus the typing input after restart
+        setTimeout(() => {
+            const typingInput = document.getElementById('typingInput');
+            if (typingInput) {
+                typingInput.focus();
+            }
+        }, 100);
+        return false;
+    }
+}
+
+/**
+ * Set up restart button functionality
+ */
+function setupRestartButton() {
+    const restartBtn = document.getElementById('restartBtn');
+    if (restartBtn) {
+        // Remove any existing event listeners
+        restartBtn.replaceWith(restartBtn.cloneNode(true));
+        const newRestartBtn = document.getElementById('restartBtn');
+        
+        // Add click event listener
+        newRestartBtn.addEventListener('click', restartTest);
+        
+        console.log('Restart button functionality set up');
+    } else {
+        console.warn('Restart button not found in DOM');
+    }
+}
+
+/**
+ * Apply difficulty-based styling to words container
+ */
+function applyDifficultyStyles() {
+    const wordsContainer = document.getElementById('wordsContainer');
+    if (!wordsContainer) return;
+    
+    // Remove all difficulty classes
+    wordsContainer.classList.remove('difficulty-easy', 'difficulty-medium', 'difficulty-hard', 'difficulty-developer');
+    
+    // Add current difficulty class
+    wordsContainer.classList.add(`difficulty-${currentDifficulty}`);
+    
+    console.log(`Applied difficulty styling: ${currentDifficulty}`);
+}
+
+/**
  * Initialize the typing practice session
  * Generates and displays random words when page loads
  */
@@ -1293,41 +1380,22 @@ function initializeTypingSession() {
     // Display the words
     displayWords(randomWords);
     
+    // Apply difficulty-based styling
+    applyDifficultyStyles();
+    
     // Enable typing input
     enableTypingInput();
     
-    // Set up restart button
+    // Set up restart button functionality
     setupRestartButton();
+    
+    // Set up global keyboard shortcuts
+    setupGlobalKeyHandlers();
     
     console.log(`Successfully displayed ${randomWords.length} words and enabled typing`);
 }
 
-/**
- * Set up the restart button functionality
- */
-function setupRestartButton() {
-    // Create restart button if it doesn't exist
-    let restartButton = document.getElementById('restartButton');
-    
-    if (!restartButton) {
-        restartButton = document.createElement('button');
-        restartButton.id = 'restartButton';
-        restartButton.className = 'restart-button';
-        restartButton.textContent = 'Restart Test';
-        
-        // Add button to the stats section
-        const statsSection = document.querySelector('.stats-section');
-        if (statsSection) {
-            statsSection.appendChild(restartButton);
-        }
-    }
-    
-    // Remove existing event listeners and add new one
-    const newButton = restartButton.cloneNode(true);
-    restartButton.parentNode.replaceChild(newButton, restartButton);
-    
-    newButton.addEventListener('click', restartTest);
-}
+
 
 /**
  * Set up the difficulty selector functionality
